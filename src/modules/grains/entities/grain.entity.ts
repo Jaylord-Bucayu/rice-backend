@@ -27,4 +27,7 @@ export class Grain extends AbstractEntity<Grain> {
   @Column()
   location: string;
 
+  @Column('decimal', { precision: 12, scale: 2 })
+  total_income: number;
+
 }

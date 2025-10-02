@@ -1,4 +1,13 @@
-import { IsString, IsInt, IsNumber } from 'class-validator';
+import { IsString, IsInt, IsNumber, IsOptional, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+
+class ExpenseDto {
+  @IsString()
+  title: string;
+
+  @IsNumber()
+  amount: number;
+}
 
 export class CreateGrainDto {
   @IsString()
@@ -15,4 +24,15 @@ export class CreateGrainDto {
 
   @IsNumber()
   total_price: number;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ExpenseDto)
+  expenses?: ExpenseDto[];
+
+  @IsNumber()
+  total_expenses: number;
+
+  @IsNumber()
+  total_income: number;
 }
