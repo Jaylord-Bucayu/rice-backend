@@ -17,4 +17,14 @@ export class Grain extends AbstractEntity<Grain> {
 
   @Column('decimal', { precision: 12, scale: 2 })
   total_price: number;
+  
+  @Column('json', { nullable: true })
+  expenses: { title: string; amount: number }[];
+
+  @Column()
+  total_expenses: number;
+
+  @Column()
+  location: string;
+
 }
