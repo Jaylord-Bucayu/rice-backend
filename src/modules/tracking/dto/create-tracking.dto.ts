@@ -34,7 +34,7 @@ export class CreateTrackingDto {
   price_per_kilo: number;
 
   @IsNumber()
-  total_price: number;
+  total_income: number; // was total_price
 
   @IsArray()
   @ValidateNested({ each: true })
@@ -45,7 +45,7 @@ export class CreateTrackingDto {
   total_expenses: number;
 
   @IsNumber()
-  total_earning: number;
+  total_profit: number; // was total_earning
 
   @ValidateNested()
   @Type(() => TruckDto)

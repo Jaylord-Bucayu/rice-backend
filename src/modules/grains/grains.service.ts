@@ -14,23 +14,22 @@ export class GrainsService {
   ) {}
 
   async create(createGrainDto: CreateGrainDto): Promise<Grain> {
-    // ✅ Compute total_price
-    const total_price = createGrainDto.total_kilos * createGrainDto.price_per_kilo;
+    // ✅ Compute total_income = kilos × price_per_kilo
+    const total_income =
+      createGrainDto.total_kilos * createGrainDto.price_per_kilo;
 
-    // ✅ Compute total_expense from expenses[]
-    const total_expenses = createGrainDto.expenses?.reduce(
-      (sum, exp) => sum + exp.amount,
-      0,
-    ) ?? 0;
+    // ✅ Compute total_expenses from expenses[]
+    const total_expenses =
+      createGrainDto.expenses?.reduce((sum, exp) => sum + exp.amount, 0) ?? 0;
 
-    // ✅ Compute total_income (total_price - total_expense)
-    const total_income = total_price - total_expenses;
+    // ✅ Compute total_profit = income - expenses
+    const total_profit = total_income - total_expenses;
 
     const grain = this.grainRepository.create({
       ...createGrainDto,
-      total_price,
-      total_expenses,
       total_income,
+      total_expenses,
+      total_profit,
     });
 
     return this.grainRepository.save(grain);
@@ -75,19 +74,17 @@ export class GrainsService {
     // Apply updates
     Object.assign(grain, updateGrainDto);
 
-    // ✅ Always recalc total_price
+    // ✅ Always recalc total_income
     if (grain.total_kilos && grain.price_per_kilo) {
-      grain.total_price = grain.total_kilos * grain.price_per_kilo;
+      grain.total_income = grain.total_kilos * grain.price_per_kilo;
     }
 
-    // ✅ Always recalc total_expense
-    grain.total_expenses = grain.expenses?.reduce(
-      (sum, exp) => sum + exp.amount,
-      0,
-    ) ?? 0;
+    // ✅ Always recalc total_expenses
+    grain.total_expenses =
+      grain.expenses?.reduce((sum, exp) => sum + exp.amount, 0) ?? 0;
 
-    // ✅ Always recalc total_income
-    grain.total_income = grain.total_price - grain.total_expenses;
+    // ✅ Always recalc total_profit
+    grain.total_profit = grain.total_income - grain.total_expenses;
 
     return this.grainRepository.save(grain);
   }

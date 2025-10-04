@@ -17,13 +17,13 @@ export class TrackingsService {
     const tracking = this.trackingRepository.create(createTrackingDto);
 
     // 🔄 Auto compute totals on create
-    tracking.total_price = tracking.total_kilos * tracking.price_per_kilo;
+    tracking.total_income = tracking.total_kilos * tracking.price_per_kilo;
 
     tracking.total_expenses = tracking.expenses?.length
       ? tracking.expenses.reduce((sum, exp) => sum + exp.amount, 0)
       : 0;
 
-    tracking.total_earning = tracking.total_price - tracking.total_expenses;
+    tracking.total_profit = tracking.total_income - tracking.total_expenses;
 
     return this.trackingRepository.save(tracking);
   }
@@ -58,13 +58,13 @@ export class TrackingsService {
     Object.assign(tracking, updateTrackingDto);
 
     // 🔄 Recompute totals
-    tracking.total_price = tracking.total_kilos * tracking.price_per_kilo;
+    tracking.total_income = tracking.total_kilos * tracking.price_per_kilo;
 
     tracking.total_expenses = tracking.expenses?.length
       ? tracking.expenses.reduce((sum, exp) => sum + exp.amount, 0)
       : 0;
 
-    tracking.total_earning = tracking.total_price - tracking.total_expenses;
+    tracking.total_profit = tracking.total_income - tracking.total_expenses;
 
     return this.trackingRepository.save(tracking);
   }

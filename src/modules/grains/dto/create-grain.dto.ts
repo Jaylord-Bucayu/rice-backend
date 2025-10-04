@@ -23,7 +23,7 @@ export class CreateGrainDto {
   price_per_kilo: number;
 
   @IsNumber()
-  total_price: number;
+  total_income: number; // previously total_price
 
   @IsOptional()
   @ValidateNested({ each: true })
@@ -34,5 +34,5 @@ export class CreateGrainDto {
   total_expenses: number;
 
   @IsNumber()
-  total_income: number;
+  total_profit: number; // previously total_income
 }

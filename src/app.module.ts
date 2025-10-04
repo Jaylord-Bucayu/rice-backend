@@ -17,6 +17,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TrucksModule } from './modules/trucks/trucks.module';
 import { GrainsModule } from './modules/grains/grains.module';
 import { TrackingsModule } from './modules/tracking/tracking.module';
+import { TotalsModule } from './modules/totals/totals.module';
 
 
 @Module({
@@ -28,7 +29,8 @@ import { TrackingsModule } from './modules/tracking/tracking.module';
     PingModule,
     TrucksModule,
     GrainsModule,
-    TrackingsModule
+    TrackingsModule,
+    TotalsModule
   ],
   controllers: [AppController],
   providers: [

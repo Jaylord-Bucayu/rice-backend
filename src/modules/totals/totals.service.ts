@@ -1,0 +1,92 @@
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Grain } from '../grains/entities/grain.entity';
+import { Tracking } from '../tracking/entities/tracking.entity';
+import { TotalsQueryDto } from './dto/total.dto';
+
+@Injectable()
+export class TotalsService {
+  constructor(
+    @InjectRepository(Grain)
+    private readonly grainRepository: Repository<Grain>,
+
+    @InjectRepository(Tracking)
+    private readonly trackingRepository: Repository<Tracking>,
+  ) {}
+
+ async getTotals(params: {
+  classifier: string;
+  start_date: string;
+  end_date?: string;
+  grain_type?: string;
+}) {
+  const { classifier, start_date, end_date, grain_type } = params;
+
+  if (!classifier || !start_date) {
+    throw new BadRequestException(
+      "classifier and start_date are required",
+    );
+  }
+
+  // Convert dates
+  const start = new Date(start_date);
+  let end: Date;
+
+  if (end_date) {
+    end = new Date(end_date);
+  } else {
+    // if no end_date, use same as start
+    end = new Date(start_date);
+  }
+
+  // Always cover the full last day (until 23:59:59)
+  end.setUTCHours(23, 59, 59, 999);
+
+  // Build query (works with Mongo driver in TypeORM)
+  const where: any = {
+    createdAt: {
+      $gte: start,
+      $lte: end,
+    },
+  };
+
+  if (grain_type) {
+    where.grain_type = grain_type;
+  }
+
+  let data: any[] = [];
+
+  if (classifier === "grain") {
+    data = await this.grainRepository.find({ where });
+  } else if (classifier === "tracking") {
+    data = await this.trackingRepository.find({ where });
+  } else {
+    throw new BadRequestException(
+      "Invalid classifier. Use 'grain' or 'tracking'",
+    );
+  }
+
+  // ✅ Aggregate totals
+  const totals = data.reduce(
+    (acc, item) => {
+      acc.total_sacks += item.total_sacks || 0;
+      acc.total_kilos += item.total_kilos || 0;
+      acc.total_income += Number(item.total_income) || 0; 
+      acc.total_expenses += Number(item.total_expenses) || 0;
+      acc.total_profit += Number(item.total_profit) || 0;
+      return acc;
+    },
+    {
+      total_sacks: 0,
+      total_kilos: 0,
+      total_income: 0,
+      total_expenses: 0,
+      total_profit: 0,
+    },
+  );
+
+  return totals;
+}
+
+}
