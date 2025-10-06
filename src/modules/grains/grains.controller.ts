@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { GrainsService } from './grains.service';
 import { CreateGrainDto } from './dto/create-grain.dto';
 import { UpdateGrainDto } from './dto/update-grain.dto';
@@ -13,8 +13,11 @@ export class GrainsController {
   }
 
   @Get()
-  findAll() {
-    return this.grainsService.findAll();
+  findAll(
+    @Query('start_date') start_date?: string,
+    @Query('end_date') end_date?: string,
+  ) {
+    return this.grainsService.findAll(start_date, end_date);
   }
 
  @Get(':id')

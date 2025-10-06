@@ -89,4 +89,49 @@ export class TotalsService {
   return totals;
 }
 
+async getTotalsByGrainType(params: {
+  start_date: string;
+  end_date: string;
+}) {
+  const { start_date, end_date } = params;
+
+  const start = new Date(start_date);
+  const end = new Date(end_date);
+  end.setUTCHours(23, 59, 59, 999);
+
+  // Fetch grain data only
+  const data = await this.grainRepository.find({
+    where: {
+      //@ts-ignore
+      createdAt: { $gte: start, $lte: end },
+    },
+  });
+
+  // Group by grain_type
+  const grouped: Record<string, any> = {};
+
+  data.forEach(item => {
+    const type = item.grain_type;
+    if (!grouped[type]) {
+      grouped[type] = {
+        grain_type: type,
+        total_sacks: 0,
+        total_kilos: 0,
+        total_expenses: 0,
+        total_income: 0,
+        total_profit: 0,
+      };
+    }
+
+    grouped[type].total_sacks += item.total_sacks || 0;
+    grouped[type].total_kilos += item.total_kilos || 0;
+    grouped[type].total_expenses += Number(item.total_expenses) || 0;
+    grouped[type].total_income += Number(item.total_income) || 0;
+    grouped[type].total_profit += Number(item.total_profit) || 0;
+  });
+
+  return Object.values(grouped);
+}
+
+
 }

@@ -28,7 +28,32 @@ export class TrackingsService {
     return this.trackingRepository.save(tracking);
   }
 
-  async findAll(): Promise<Tracking[]> {
+  async findAll(start_date?: string, end_date?: string): Promise<Tracking[]> {
+     let where: any = {};
+
+    if (start_date || end_date) {
+      // Convert dates
+      const start = new Date(start_date);
+      let end: Date;
+
+      if (end_date) {
+        end = new Date(end_date);
+      } else {
+        // if no end_date, use same as start
+        end = new Date(start_date);
+      }
+
+      // Always cover the full last day (until 23:59:59)
+      end.setUTCHours(23, 59, 59, 999);
+
+      // Build query (works with Mongo driver in TypeORM)
+       where = {
+        createdAt: {
+          $gte: start,
+          $lte: end,
+        },
+      };
+    }
     return this.trackingRepository.find();
   }
 

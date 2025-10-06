@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { CreateTrackingDto } from './dto/create-tracking.dto';
 import { UpdateTrackingDto } from './dto/update-tracking.dto';
 import { TrackingsService } from './tracking.service';
 
 @Controller('trackings')
 export class TrackingsController {
-  constructor(private readonly trackingsService: TrackingsService) {}
+  constructor(private readonly trackingsService: TrackingsService) { }
 
   @Post()
   create(@Body() createTrackingDto: CreateTrackingDto) {
@@ -13,8 +13,9 @@ export class TrackingsController {
   }
 
   @Get()
-  findAll() {
-    return this.trackingsService.findAll();
+  findAll(@Query('start_date') start_date?: string,
+    @Query('end_date') end_date?: string,) {
+    return this.trackingsService.findAll(start_date, end_date);
   }
 
   @Get(':id')

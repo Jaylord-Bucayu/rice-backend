@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Grain } from './entities/grain.entity';
 import { CreateGrainDto } from './dto/create-grain.dto';
 import { UpdateGrainDto } from './dto/update-grain.dto';
@@ -11,7 +11,7 @@ export class GrainsService {
   constructor(
     @InjectRepository(Grain)
     private readonly grainRepository: Repository<Grain>,
-  ) {}
+  ) { }
 
   async create(createGrainDto: CreateGrainDto): Promise<Grain> {
     // ✅ Compute total_income = kilos × price_per_kilo
@@ -35,9 +35,36 @@ export class GrainsService {
     return this.grainRepository.save(grain);
   }
 
-  async findAll(): Promise<Grain[]> {
-    return this.grainRepository.find();
+  async findAll(start_date?: string, end_date?: string): Promise<Grain[]> {
+    let where: any = {};
+
+    if (start_date || end_date) {
+      // Convert dates
+      const start = new Date(start_date);
+      let end: Date;
+
+      if (end_date) {
+        end = new Date(end_date);
+      } else {
+        // if no end_date, use same as start
+        end = new Date(start_date);
+      }
+
+      // Always cover the full last day (until 23:59:59)
+      end.setUTCHours(23, 59, 59, 999);
+
+      // Build query (works with Mongo driver in TypeORM)
+       where = {
+        createdAt: {
+          $gte: start,
+          $lte: end,
+        },
+      };
+    }
+
+    return this.grainRepository.find({ where });
   }
+
 
   async findOne(id: string): Promise<Grain> {
     let objectId: ObjectId;
