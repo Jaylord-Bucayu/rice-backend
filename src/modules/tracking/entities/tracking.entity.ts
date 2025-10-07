@@ -39,6 +39,7 @@ export class Tracking extends AbstractEntity<Tracking> {
   @Column('json', { nullable: false, default: { cement_amount: 0, abono_amount: 0, hardware_amount: 0 } })
   backload: { cement_amount: number; abono_amount: number; hardware_amount: number };
 
+  @Column()
   //total_amount backload
    total_backload_amount: number;
 }

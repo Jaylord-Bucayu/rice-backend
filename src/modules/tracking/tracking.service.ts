@@ -89,20 +89,30 @@ export class TrackingsService {
   async update(id: string, updateTrackingDto: UpdateTrackingDto): Promise<Tracking> {
     const tracking = await this.findOne(id);
 
-    // Apply updates
+    // 🧩 Apply updates
     Object.assign(tracking, updateTrackingDto);
 
-    // 🔄 Recompute totals
+    // 🧮 Recompute total backload amount dynamically
+    tracking.total_backload_amount = tracking.backload
+      ? Object.values(tracking.backload).reduce((sum, value) => sum + Number(value || 0), 0)
+      : 0;
+
+    // 💰 Recompute total income
     tracking.total_income = tracking.total_kilos * tracking.price_per_kilo;
 
+    // 💸 Recompute total expenses
     tracking.total_expenses = tracking.expenses?.length
       ? tracking.expenses.reduce((sum, exp) => sum + exp.amount, 0)
       : 0;
 
-    tracking.total_profit = tracking.total_income - tracking.total_expenses;
+    // ✅ Recompute total profit (income + backload - expenses)
+    tracking.total_profit =
+      tracking.total_income + tracking.total_backload_amount - tracking.total_expenses;
 
+    // 💾 Save updates
     return this.trackingRepository.save(tracking);
   }
+
 
   async remove(id: string): Promise<void> {
     let objectId: ObjectId;
