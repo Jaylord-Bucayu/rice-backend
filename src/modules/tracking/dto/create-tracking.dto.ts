@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsNumber, IsArray, ValidateNested, IsOptional, IsObject } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ExpenseDto {
@@ -20,6 +20,20 @@ export class TruckDto {
   truck_name: string;
 }
 
+export class BackloadDto {
+  @IsOptional()
+  @IsNumber()
+  cement_amount: number;
+
+  @IsOptional()
+  @IsNumber()
+  abono_amount: number;
+
+  @IsOptional()
+  @IsNumber()
+  hardware_amount: number;
+}
+
 export class CreateTrackingDto {
   @IsString()
   grain_type: string;
@@ -34,7 +48,7 @@ export class CreateTrackingDto {
   price_per_kilo: number;
 
   @IsNumber()
-  total_income: number; // was total_price
+  total_income: number;
 
   @IsArray()
   @ValidateNested({ each: true })
@@ -45,9 +59,16 @@ export class CreateTrackingDto {
   total_expenses: number;
 
   @IsNumber()
-  total_profit: number; // was total_earning
+  total_profit: number;
 
   @ValidateNested()
   @Type(() => TruckDto)
   truck: TruckDto;
+
+  @ValidateNested()
+  @Type(() => BackloadDto)
+  backload: BackloadDto;
+
+  @IsNumber()
+  total_backload_amount: number;
 }

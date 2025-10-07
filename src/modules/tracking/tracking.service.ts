@@ -11,25 +11,35 @@ export class TrackingsService {
   constructor(
     @InjectRepository(Tracking)
     private readonly trackingRepository: Repository<Tracking>,
-  ) {}
+  ) { }
 
   async create(createTrackingDto: CreateTrackingDto): Promise<Tracking> {
     const tracking = this.trackingRepository.create(createTrackingDto);
 
-    // 🔄 Auto compute totals on create
+    // 🧮 Compute total backload amount dynamically
+    tracking.total_backload_amount = tracking.backload
+      ? Object.values(tracking.backload).reduce((sum, value) => sum + Number(value || 0), 0)
+      : 0;
+
+    // 💰 Compute total income
     tracking.total_income = tracking.total_kilos * tracking.price_per_kilo;
 
+    // 💸 Compute total expenses
     tracking.total_expenses = tracking.expenses?.length
       ? tracking.expenses.reduce((sum, exp) => sum + exp.amount, 0)
       : 0;
 
-    tracking.total_profit = tracking.total_income - tracking.total_expenses;
+    // ✅ Compute total profit (income + backload - expenses)
+    tracking.total_profit =
+      tracking.total_income + tracking.total_backload_amount - tracking.total_expenses;
 
+    // 💾 Save to DB
     return this.trackingRepository.save(tracking);
   }
 
+
   async findAll(start_date?: string, end_date?: string): Promise<Tracking[]> {
-     let where: any = {};
+    let where: any = {};
 
     if (start_date || end_date) {
       // Convert dates
@@ -47,7 +57,7 @@ export class TrackingsService {
       end.setUTCHours(23, 59, 59, 999);
 
       // Build query (works with Mongo driver in TypeORM)
-       where = {
+      where = {
         createdAt: {
           $gte: start,
           $lte: end,

@@ -5,7 +5,7 @@ import { Entity, Column } from 'typeorm';
 export class Tracking extends AbstractEntity<Tracking> {
   @Column()
   grain_type: string;
-    
+
   @Column()
   total_sacks: number;
 
@@ -34,4 +34,11 @@ export class Tracking extends AbstractEntity<Tracking> {
     plate_no: string;
     truck_name: string;
   };
+
+  //backload
+  @Column('json', { nullable: false, default: { cement_amount: 0, abono_amount: 0, hardware_amount: 0 } })
+  backload: { cement_amount: number; abono_amount: number; hardware_amount: number };
+
+  //total_amount backload
+   total_backload_amount: number;
 }
