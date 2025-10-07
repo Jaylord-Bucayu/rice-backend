@@ -99,7 +99,7 @@ export class AuthController {
     await this.authService.changePassword(userId,body)
   }
 
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   @Post('logout')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     //@ts-ignore

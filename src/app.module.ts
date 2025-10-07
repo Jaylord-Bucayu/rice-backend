@@ -7,13 +7,8 @@ import { DatabaseModule } from './common/database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './common/interceptors/response.interceptors';
-import { StudentModule } from './modules/student/student.module';
-import { SectionModule } from './modules/section/section.module';
-import { GradeModule } from './modules/grade/grade.module';
-import { OffenceModule } from './modules/offence/offence.module';
-import { StudentOffenceModule } from './modules/student_offence/student-offence.module';
+
 import { PingModule } from './modules/ping/ping.module';
-import { ScheduleModule } from '@nestjs/schedule';
 import { TrucksModule } from './modules/trucks/trucks.module';
 import { GrainsModule } from './modules/grains/grains.module';
 import { TrackingsModule } from './modules/tracking/tracking.module';
