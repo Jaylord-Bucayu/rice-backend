@@ -111,8 +111,6 @@ export class AuthService {
      
     });
 
-    console.log({ newUser, hashedPassword });
-
     await this.userRepository.save(newUser);
 
     return newUser;
@@ -162,4 +160,16 @@ export class AuthService {
     // Update the user's password in the database
     return this.userRepository.update(user.id, { password: hashedPassword });
   }
+
+  async logout(userId: number, res: any) {
+  // Invalidate the stored token in the database
+  await this.userRepository.update(userId, { token: '' });
+
+  // Clear the cookies (if you're using cookies)
+  res.clearCookie('access_token', { sameSite: 'strict', secure: true });
+  res.clearCookie('refresh_token', { sameSite: 'strict', secure: true });
+
+  return { message: 'Logout successful' };
+}
+
 }

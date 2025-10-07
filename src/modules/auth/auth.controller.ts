@@ -99,5 +99,12 @@ export class AuthController {
     await this.authService.changePassword(userId,body)
   }
 
+  @UseGuards(AuthGuard)
+  @Post('logout')
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    //@ts-ignore
+    const user = req.user as any; // depends on your Jwt strategy payload
+    return this.authService.logout(user.id, res);
+  }
 
 }
