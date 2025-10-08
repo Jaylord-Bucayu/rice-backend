@@ -102,7 +102,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(user.password, 10);
 
     const newUser = this.userRepository.create({
-      firstname: user.lastname,
+      firstname: user.firstname,
       role: user.role || 'USER',
       email: user.email,
       lastname: user.lastname,
