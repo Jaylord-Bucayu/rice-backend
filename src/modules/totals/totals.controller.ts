@@ -25,4 +25,23 @@ export class TotalsController {
       end_date,
     });
   }
+
+ // ✅ /totals/income-expenses?year=2025&classifier=grain&grain_type=white
+  @Get('income-expenses')
+  async getIncomeExpensesPerMonth(
+    @Query('year') year: string,
+    @Query('classifier') classifier: string,
+    @Query('grain_type') grain_type?: string,
+  ) {
+    const yearNum = Number(year);
+    if (!yearNum || isNaN(yearNum)) {
+      throw new BadRequestException('Invalid or missing year');
+    }
+
+    return this.totalsService.getIncomeExpensesPerMonth({
+      year: yearNum,
+      classifier,
+    });
+  }
+  
 }

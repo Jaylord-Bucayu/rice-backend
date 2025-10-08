@@ -133,5 +133,71 @@ async getTotalsByGrainType(params: {
   return Object.values(grouped);
 }
 
+// ✅ getIncomeExpensesPerMonth (with month names)
+async getIncomeExpensesPerMonth(params: {
+  year: number;
+  classifier: string;
+}) {
+  const { year, classifier } = params;
+
+  if (!year || !classifier) {
+    throw new BadRequestException('year and classifier are required');
+  }
+
+  // Convert dates (full year)
+  const start_date = `${year}-01-01`;
+  const end_date = `${year}-12-31`;
+
+  const start = new Date(start_date);
+  let end: Date;
+
+  if (end_date) {
+    end = new Date(end_date);
+  } else {
+    end = new Date(start_date);
+  }
+
+  // Always cover the full last day (until 23:59:59)
+  end.setUTCHours(23, 59, 59, 999);
+
+  // Build query (Mongo-style range)
+  const where: any = {
+    createdAt: {
+      $gte: start,
+      $lte: end,
+    },
+  };
+
+  let data: any[] = [];
+
+  if (classifier === 'grain') {
+    data = await this.grainRepository.find({ where });
+  } else if (classifier === 'tracking') {
+    data = await this.trackingRepository.find({ where });
+  } else {
+    throw new BadRequestException("Invalid classifier. Use 'grain' or 'tracking'");
+  }
+
+  // Month labels
+  const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  // Initialize monthly totals
+  const grouped = monthLabels.map((month) => ({
+    month,
+    total_income: 0,
+    total_expenses: 0,
+    total_profit: 0,
+  }));
+
+  // Aggregate data
+  data.forEach(item => {
+    const monthIndex = new Date(item.createdAt).getMonth(); // 0–11
+    grouped[monthIndex].total_income += Number(item.total_income) || 0;
+    grouped[monthIndex].total_expenses += Number(item.total_expenses) || 0;
+    grouped[monthIndex].total_profit += Number(item.total_profit) || 0;
+  });
+
+  return grouped;
+}
 
 }
