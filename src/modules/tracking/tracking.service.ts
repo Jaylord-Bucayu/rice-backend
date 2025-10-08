@@ -64,7 +64,7 @@ export class TrackingsService {
         },
       };
     }
-    return this.trackingRepository.find();
+    return this.trackingRepository.find({ where });
   }
 
   async findOne(id: string): Promise<Tracking> {
