@@ -11,15 +11,13 @@ export class TrackingsService {
   constructor(
     @InjectRepository(Tracking)
     private readonly trackingRepository: Repository<Tracking>,
-  ) { }
+  ) {}
 
   async create(createTrackingDto: CreateTrackingDto): Promise<Tracking> {
     const tracking = this.trackingRepository.create(createTrackingDto);
 
-    // 🧮 Compute total backload amount dynamically
-    tracking.total_backload_amount = tracking.backload
-      ? Object.values(tracking.backload).reduce((sum, value) => sum + Number(value || 0), 0)
-      : 0;
+    // 🧮 Compute total backload amount (sum of cement, abono, hardware totals)
+    tracking.total_backload_amount = this.computeBackloadTotal(tracking.backload);
 
     // 💰 Compute total income
     tracking.total_income = tracking.total_kilos * tracking.price_per_kilo;
@@ -37,26 +35,31 @@ export class TrackingsService {
     return this.trackingRepository.save(tracking);
   }
 
+  private computeBackloadTotal(backload: any): number {
+    if (!backload) return 0;
+
+    const items = [backload.cement, backload.abono, backload.hardware];
+    return items.reduce((sum, item) => {
+      const total = item?.total ?? 0;
+      return sum + Number(total);
+    }, 0);
+  }
 
   async findAll(start_date?: string, end_date?: string): Promise<Tracking[]> {
     let where: any = {};
 
     if (start_date || end_date) {
-      // Convert dates
       const start = new Date(start_date);
       let end: Date;
 
       if (end_date) {
         end = new Date(end_date);
       } else {
-        // if no end_date, use same as start
         end = new Date(start_date);
       }
 
-      // Always cover the full last day (until 23:59:59)
       end.setUTCHours(23, 59, 59, 999);
 
-      // Build query (works with Mongo driver in TypeORM)
       where = {
         createdAt: {
           $gte: start,
@@ -64,6 +67,7 @@ export class TrackingsService {
         },
       };
     }
+
     return this.trackingRepository.find({ where });
   }
 
@@ -75,8 +79,7 @@ export class TrackingsService {
       throw new NotFoundException(`Invalid ID format: ${id}`);
     }
 
-    // Query using _id for MongoDB
-    // @ts-ignore
+    // @ts-ignore - MongoDB query
     const tracking = await this.trackingRepository.findOne({ where: { _id: objectId } });
 
     if (!tracking) {
@@ -92,27 +95,18 @@ export class TrackingsService {
     // 🧩 Apply updates
     Object.assign(tracking, updateTrackingDto);
 
-    // 🧮 Recompute total backload amount dynamically
-    tracking.total_backload_amount = tracking.backload
-      ? Object.values(tracking.backload).reduce((sum, value) => sum + Number(value || 0), 0)
-      : 0;
-
-    // 💰 Recompute total income
+    // 🧮 Recompute totals
+    tracking.total_backload_amount = this.computeBackloadTotal(tracking.backload);
     tracking.total_income = tracking.total_kilos * tracking.price_per_kilo;
-
-    // 💸 Recompute total expenses
     tracking.total_expenses = tracking.expenses?.length
       ? tracking.expenses.reduce((sum, exp) => sum + exp.amount, 0)
       : 0;
-
-    // ✅ Recompute total profit (income + backload - expenses)
     tracking.total_profit =
       tracking.total_income + tracking.total_backload_amount - tracking.total_expenses;
 
     // 💾 Save updates
     return this.trackingRepository.save(tracking);
   }
-
 
   async remove(id: string): Promise<void> {
     let objectId: ObjectId;

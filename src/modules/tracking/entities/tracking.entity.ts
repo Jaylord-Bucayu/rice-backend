@@ -27,7 +27,7 @@ export class Tracking extends AbstractEntity<Tracking> {
   @Column()
   total_profit: number; // was total_earning
 
-  // truck stored as JSON
+  // 🚚 Truck stored as JSON
   @Column('json')
   truck: {
     driver_name: string;
@@ -35,11 +35,22 @@ export class Tracking extends AbstractEntity<Tracking> {
     truck_name: string;
   };
 
-  //backload
-  @Column('json', { nullable: false, default: { cement_amount: 0, abono_amount: 0, hardware_amount: 0 } })
-  backload: { cement_amount: number; abono_amount: number; hardware_amount: number };
+  // 🧱 Backload stored as JSON with nested structure
+  @Column('json', {
+    nullable: false,
+    default: {
+      cement: { quantity: 0, price: 0, total: 0 },
+      abono: { quantity: 0, price: 0, total: 0 },
+      hardware: { quantity: 0, price: 0, total: 0 },
+    },
+  })
+  backload: {
+    cement: { quantity: number; price: number; total: number };
+    abono: { quantity: number; price: number; total: number };
+    hardware: { quantity: number; price: number; total: number };
+  };
 
-  @Column()
-  //total_amount backload
-   total_backload_amount: number;
+  // 💰 Total of all backload items
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  total_backload_amount: number;
 }

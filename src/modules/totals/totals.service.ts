@@ -74,7 +74,7 @@ export class TotalsService {
       acc.total_kilos += item.total_kilos || 0;
       acc.total_income += Number(item.total_income) || 0; 
       acc.total_expenses += Number(item.total_expenses) || 0;
-      acc.total_profit += Number(item.total_profit) || 0;
+      acc.total_gross += Number(item.total_gross) || 0;
       return acc;
     },
     {
@@ -82,7 +82,7 @@ export class TotalsService {
       total_kilos: 0,
       total_income: 0,
       total_expenses: 0,
-      total_profit: 0,
+      total_gross: 0,
     },
   );
 
@@ -119,7 +119,7 @@ async getTotalsByGrainType(params: {
         total_kilos: 0,
         total_expenses: 0,
         total_income: 0,
-        total_profit: 0,
+        total_gross: 0,
       };
     }
 
@@ -127,7 +127,7 @@ async getTotalsByGrainType(params: {
     grouped[type].total_kilos += item.total_kilos || 0;
     grouped[type].total_expenses += Number(item.total_expenses) || 0;
     grouped[type].total_income += Number(item.total_income) || 0;
-    grouped[type].total_profit += Number(item.total_profit) || 0;
+    grouped[type].total_gross += Number(item.total_gross) || 0;
   });
 
   return Object.values(grouped);
@@ -186,7 +186,7 @@ async getIncomeExpensesPerMonth(params: {
     month,
     total_income: 0,
     total_expenses: 0,
-    total_profit: 0,
+    total_gross: 0,
   }));
 
   // Aggregate data
@@ -194,7 +194,7 @@ async getIncomeExpensesPerMonth(params: {
     const monthIndex = new Date(item.createdAt).getMonth(); // 0–11
     grouped[monthIndex].total_income += Number(item.total_income) || 0;
     grouped[monthIndex].total_expenses += Number(item.total_expenses) || 0;
-    grouped[monthIndex].total_profit += Number(item.total_profit) || 0;
+    grouped[monthIndex].total_gross += Number(item.total_gross) || 0;
   });
 
   return grouped;

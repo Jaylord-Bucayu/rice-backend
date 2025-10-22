@@ -23,19 +23,19 @@ export class GrainsService {
       createGrainDto.expenses?.reduce((sum, exp) => sum + exp.amount, 0) ?? 0;
 
     // ✅ Compute total_profit = income - expenses
-    const total_profit = total_income - total_expenses;
+    const total_gross = total_income + total_expenses;
 
     const grain = this.grainRepository.create({
       ...createGrainDto,
       total_income,
       total_expenses,
-      total_profit,
+      total_gross,
     });
 
     return this.grainRepository.save(grain);
   }
 
-  async findAll(start_date?: string, end_date?: string): Promise<Grain[]> {
+  async findAll(start_date?: string, end_date?: string,status?:string,cropping?:number): Promise<Grain[]> {
     let where: any = {};
 
     if (start_date || end_date) {
@@ -61,6 +61,17 @@ export class GrainsService {
         },
       };
     }
+
+    // ⚙️ Status filter
+    if (status) {
+      where.status = status;
+    }
+
+    // 🌾 Cropping filter
+    if (typeof cropping === 'number') {
+      where.cropping = cropping;
+    }
+
 
     return this.grainRepository.find({ where });
   }
@@ -111,7 +122,7 @@ export class GrainsService {
       grain.expenses?.reduce((sum, exp) => sum + exp.amount, 0) ?? 0;
 
     // ✅ Always recalc total_profit
-    grain.total_profit = grain.total_income - grain.total_expenses;
+    grain.total_gross = grain.total_income + grain.total_expenses;
 
     return this.grainRepository.save(grain);
   }
@@ -130,4 +141,44 @@ export class GrainsService {
       throw new NotFoundException(`Grain with ID ${id} not found`);
     }
   }
+
+
+  // 🆕 NEW FUNCTION — Get grains by multiple IDs
+async findByIds(ids: string[]) {
+  if (!ids || !ids.length) {
+    throw new NotFoundException('No IDs provided');
+  }
+
+  // Convert string IDs to ObjectId instances
+  const objectIds = ids.map((id) => {
+    try {
+      return new ObjectId(id);
+    } catch {
+      throw new NotFoundException(`Invalid ID format: ${id}`);
+    }
+  });
+
+  // @ts-ignore (MongoDB filter)
+  const grains = await this.grainRepository.find({
+    //@ts-ignore
+    where: { _id: { $in: objectIds } },
+  });
+
+  if (!grains.length)
+    throw new NotFoundException('No grains found for provided IDs');
+
+  // 🧮 Compute summary totals
+  const summary = {
+    total_income: grains.reduce((sum, g) => sum + (g.total_income || 0), 0),
+    total_expenses: grains.reduce((sum, g) => sum + (g.total_expenses || 0), 0),
+    total_gross: grains.reduce((sum, g) => sum + (g.total_gross || 0), 0),
+    total_kilos: grains.reduce((sum, g) => sum + (g.total_kilos || 0), 0),
+    price_per_kilo: grains.reduce((sum, g) => sum + (g.price_per_kilo || 0), 0),
+ 
+  };
+
+  return { grains, summary };
+}
+
+
 }

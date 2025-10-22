@@ -1,4 +1,11 @@
-import { IsString, IsNumber, IsArray, ValidateNested, IsOptional, IsObject } from 'class-validator';
+import { 
+  IsString, 
+  IsNumber, 
+  IsArray, 
+  ValidateNested, 
+  IsOptional, 
+  IsObject 
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ExpenseDto {
@@ -20,18 +27,32 @@ export class TruckDto {
   truck_name: string;
 }
 
+export class BackloadItemDto {
+  @IsOptional()
+  @IsNumber()
+  quantity: number;
+
+  @IsOptional()
+  @IsNumber()
+  price: number;
+
+  @IsOptional()
+  @IsNumber()
+  total: number;
+}
+
 export class BackloadDto {
-  @IsOptional()
-  @IsNumber()
-  cement_amount: number;
+  @ValidateNested()
+  @Type(() => BackloadItemDto)
+  cement: BackloadItemDto;
 
-  @IsOptional()
-  @IsNumber()
-  abono_amount: number;
+  @ValidateNested()
+  @Type(() => BackloadItemDto)
+  abono: BackloadItemDto;
 
-  @IsOptional()
-  @IsNumber()
-  hardware_amount: number;
+  @ValidateNested()
+  @Type(() => BackloadItemDto)
+  hardware: BackloadItemDto;
 }
 
 export class CreateTrackingDto {
