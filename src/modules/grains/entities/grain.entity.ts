@@ -29,7 +29,7 @@ export class Grain extends AbstractEntity<Grain> {
   @Column()
   total_expenses: number
 
-  @Column()
+  @Column('int')
   cropping: number
 
   @Column({
