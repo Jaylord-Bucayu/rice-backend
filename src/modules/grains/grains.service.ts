@@ -51,7 +51,7 @@ console.log("Type:", typeof cropping);
     where.status = status;
   }
 
-  if (cropping === 1 || cropping === 2) {
+  if (cropping == 1 || cropping == 2) {
     where.cropping = cropping;
   } else if (cropping === 3 || cropping === undefined) {
     if (start_date || end_date) {
