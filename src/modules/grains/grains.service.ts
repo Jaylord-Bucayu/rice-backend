@@ -35,46 +35,40 @@ export class GrainsService {
     return this.grainRepository.save(grain);
   }
 
-  async findAll(start_date?: string, end_date?: string,status?:string,cropping?:number): Promise<Grain[]> {
-    let where: any = {};
+async findAll(
+  start_date?: string,
+  end_date?: string,
+  status?: string,
+  cropping?: number
+): Promise<Grain[]> {
+  let where: any = {};
 
+  // ⚙️ Status filter
+  if (status) {
+    where.status = status;
+  }
+
+  // 🌾 Cropping logic
+  if (cropping === 1 || cropping === 2) {
+    // When cropping is 1 or 2, ignore date filters
+    where.cropping = cropping;
+  } else if (cropping === 0 || cropping === undefined) {
+    // When cropping is 0 (or not provided), ignore cropping filter and apply date filters
     if (start_date || end_date) {
-      // Convert dates
       const start = new Date(start_date);
-      let end: Date;
-
-      if (end_date) {
-        end = new Date(end_date);
-      } else {
-        // if no end_date, use same as start
-        end = new Date(start_date);
-      }
-
-      // Always cover the full last day (until 23:59:59)
+      const end = end_date ? new Date(end_date) : new Date(start_date);
       end.setUTCHours(23, 59, 59, 999);
 
-      // Build query (works with Mongo driver in TypeORM)
-       where = {
-        createdAt: {
-          $gte: start,
-          $lte: end,
-        },
+      where.createdAt = {
+        $gte: start,
+        $lte: end,
       };
     }
-
-    // ⚙️ Status filter
-    if (status) {
-      where.status = status;
-    }
-
-    // 🌾 Cropping filter
-    if (typeof cropping === 'number') {
-      where.cropping = cropping;
-    }
-
-
-    return this.grainRepository.find({ where });
   }
+
+  return this.grainRepository.find({ where });
+}
+
 
 
   async findOne(id: string): Promise<Grain> {
