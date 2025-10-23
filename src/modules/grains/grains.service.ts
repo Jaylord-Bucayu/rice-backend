@@ -52,7 +52,7 @@ console.log("Type:", typeof cropping);
   }
 
   if (cropping == 1 || cropping == 2) {
-    where.cropping = cropping;
+    where.cropping = Number(cropping);
   } else if (cropping === 3 || cropping === undefined) {
     if (start_date || end_date) {
       const start = new Date(start_date);
