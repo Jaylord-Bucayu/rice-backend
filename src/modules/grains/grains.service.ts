@@ -43,6 +43,10 @@ async findAll(
 ): Promise<Grain[]> {
   let where: any = {};
 
+  console.log("👉 Cropping received:", cropping);
+console.log("Type:", typeof cropping);
+
+
   if (status) {
     where.status = status;
   }

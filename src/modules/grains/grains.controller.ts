@@ -12,15 +12,16 @@ export class GrainsController {
     return this.grainsService.create(createGrainDto);
   }
 
-  @Get()
-  findAll(
-    @Query('start_date') start_date?: string,
-    @Query('end_date') end_date?: string,
-    @Query('status') status?: string,
-    @Query('cropping') cropping?: number,
-  ) {
-    return this.grainsService.findAll(start_date, end_date,status,cropping);
-  }
+@Get()
+async findAll(
+  @Query('start_date') start_date?: string,
+  @Query('end_date') end_date?: string,
+  @Query('status') status?: string,
+  @Query('cropping') cropping?: number
+) {
+  return this.grainsService.findAll(start_date, end_date, status, cropping);
+}
+
 
  @Get(':id')
   findOne(@Param('id') id: string) {
