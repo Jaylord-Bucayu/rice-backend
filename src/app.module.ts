@@ -13,6 +13,7 @@ import { TrucksModule } from './modules/trucks/trucks.module';
 import { GrainsModule } from './modules/grains/grains.module';
 import { TrackingsModule } from './modules/tracking/tracking.module';
 import { TotalsModule } from './modules/totals/totals.module';
+import { UsersModule } from './modules/users/users.module';
 
 
 @Module({
@@ -25,7 +26,8 @@ import { TotalsModule } from './modules/totals/totals.module';
     TrucksModule,
     GrainsModule,
     TrackingsModule,
-    TotalsModule
+    TotalsModule,
+    UsersModule
   ],
   controllers: [AppController],
   providers: [
