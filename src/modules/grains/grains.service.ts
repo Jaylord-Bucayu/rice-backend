@@ -13,44 +13,45 @@ export class GrainsService {
     private readonly grainRepository: Repository<Grain>,
   ) { }
 
-  async create(createGrainDto: CreateGrainDto): Promise<Grain> {
-    // ✅ Compute total_income = kilos × price_per_kilo
-    const total_income =
-      createGrainDto.total_kilos * createGrainDto.price_per_kilo;
+async create(createGrainDto: CreateGrainDto): Promise<Grain> {
+  // ✅ Compute total_income = kilos × price_per_kilo
+  const total_income =
+    createGrainDto.total_kilos * createGrainDto.price_per_kilo;
 
-    // ✅ Compute total_expenses from expenses[]
-    const total_expenses =
-      createGrainDto.expenses?.reduce((sum, exp) => sum + exp.amount, 0) ?? 0;
+  // ✅ Compute total_expenses from expenses[]
+  const total_expenses =
+    createGrainDto.expenses?.reduce((sum, exp) => sum + exp.amount, 0) ?? 0;
 
-    // ✅ Compute total_profit = income - expenses
-    const total_gross = total_income + total_expenses;
+  // ✅ Compute total_gross = income + expenses
+  const total_gross = total_income + total_expenses;
 
-    const grain = this.grainRepository.create({
-      ...createGrainDto,
-      total_income,
-      total_expenses,
-      total_gross,
-    });
+  // ✅ Include cropping_year directly
+  const grain = this.grainRepository.create({
+    ...createGrainDto,
+    total_income,
+    total_expenses,
+    total_gross,
+    cropping_year: createGrainDto.cropping_year,
+  });
 
-    return this.grainRepository.save(grain);
-  }
+  return this.grainRepository.save(grain);
+}
 
 async findAll(
   start_date?: string,
   end_date?: string,
   status?: string,
-  cropping?: number
+  cropping?: number,
+  cropping_year?: number
 ): Promise<Grain[]> {
   let where: any = {};
 
-  console.log("👉 Cropping received:", cropping);
-console.log("Type:", typeof cropping);
-
-
+  // ✅ Status filter
   if (status) {
     where.status = status;
   }
 
+  // ✅ Cropping filter logic
   if (cropping == 1 || cropping == 2) {
     where.cropping = Number(cropping);
   } else if (cropping === 3 || cropping === undefined) {
@@ -66,8 +67,14 @@ console.log("Type:", typeof cropping);
     }
   }
 
+  // ✅ Cropping year filter
+  if (cropping_year) {
+    where.cropping_year = Number(cropping_year);
+  }
+
   return this.grainRepository.find({ where });
 }
+
 
 
 

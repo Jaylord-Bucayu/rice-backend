@@ -5,25 +5,26 @@ import { UpdateGrainDto } from './dto/update-grain.dto';
 
 @Controller('grains')
 export class GrainsController {
-  constructor(private readonly grainsService: GrainsService) {}
+  constructor(private readonly grainsService: GrainsService) { }
 
   @Post()
   create(@Body() createGrainDto: CreateGrainDto) {
     return this.grainsService.create(createGrainDto);
   }
 
-@Get()
-async findAll(
-  @Query('start_date') start_date?: string,
-  @Query('end_date') end_date?: string,
-  @Query('status') status?: string,
-  @Query('cropping') cropping?: number
-) {
-  return this.grainsService.findAll(start_date, end_date, status, cropping);
-}
+  @Get()
+  async findAll(
+    @Query('start_date') start_date?: string,
+    @Query('end_date') end_date?: string,
+    @Query('status') status?: string,
+    @Query('cropping') cropping?: number,
+    @Query('cropping_year') cropping_year?: number
+  ) {
+    return this.grainsService.findAll(start_date, end_date, status, cropping,cropping_year);
+  }
 
 
- @Get(':id')
+  @Get(':id')
   findOne(@Param('id') id: string) {
     return this.grainsService.findOne(id);
   }

@@ -32,6 +32,11 @@ export class Grain extends AbstractEntity<Grain> {
   @Column('int')
   cropping: number
 
+  @Column('int', { nullable: true })
+  cropping_year: number
+
+
+
   @Column({
     type: 'enum',
     enum: GrainStatus,
