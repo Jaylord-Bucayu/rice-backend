@@ -43,17 +43,13 @@ async findAll(
 ): Promise<Grain[]> {
   let where: any = {};
 
-  // ⚙️ Status filter
   if (status) {
     where.status = status;
   }
 
-  // 🌾 Cropping logic
   if (cropping === 1 || cropping === 2) {
-    // When cropping is 1 or 2, ignore date filters
     where.cropping = cropping;
-  } else if (cropping === 0 || cropping === undefined) {
-    // When cropping is 0 (or not provided), ignore cropping filter and apply date filters
+  } else if (cropping === 3 || cropping === undefined) {
     if (start_date || end_date) {
       const start = new Date(start_date);
       const end = end_date ? new Date(end_date) : new Date(start_date);
@@ -68,6 +64,7 @@ async findAll(
 
   return this.grainRepository.find({ where });
 }
+
 
 
 
