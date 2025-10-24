@@ -13,7 +13,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly itemRepository: Repository<User>,
-    private readonly entityManager: EntityManager,
+    // private readonly entityManager: EntityManager,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -125,18 +125,16 @@ export class UsersService {
      return 'Reset password successfully'
   }
 
-  async updateUser(id: number | string | ObjectId, updateUserDto: UpdateUserDto): Promise<User> {
- 
-    const user = await this.findOne(id);
-  
-    
+// ✅ Update user
+  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    //@ts-ignore
+    const user = await this.itemRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-
     Object.assign(user, updateUserDto);
-    return this.itemRepository.save(user);
+    return await this.itemRepository.save(user);
   }
 
   async currentUser(user:any){
