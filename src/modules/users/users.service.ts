@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, FindManyOptions, Like, ObjectId, Repository } from 'typeorm';
 import { classToPlain } from 'class-transformer';
 import { GetUsersFilterDto } from './dto/filter-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -139,6 +140,26 @@ export class UsersService {
 
   async currentUser(user:any){
     return await this.itemRepository.findOneBy({email:user.email});
+  }
+
+   async currentUserChangePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    //@ts-ignore
+    const user = await this.itemRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) throw new BadRequestException('Current password is incorrect');
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+
+    await this.itemRepository.save(user);
+
+    return { message: 'Password successfully changed' };
   }
 
 }

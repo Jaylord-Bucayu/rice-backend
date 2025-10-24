@@ -25,6 +25,7 @@ import { CheckAbilities } from 'src/common/decorators/ability.decorator';
 import { SignInUser } from './dto/signIn-user.dto';
 import { SortDto } from './dto/sort-user.dto';
 import { GetUsersFilterDto } from './dto/filter-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Controller('users')
 export class UsersController {
@@ -65,6 +66,28 @@ export class UsersController {
     const userId = req.user.id;
     return this.usersService.updateUser(userId, updateUserDto);
   }
+ 
+
+  @Patch(':id/reset-password')
+async resetPassword(@Param('id') id: string) {
+  const hashed = await bcrypt.hash('default123', 10); // or generate random
+  return this.usersService.updateUserPassword(id, hashed);
+}
+
+@UseGuards(JwtGuard)
+@Put('profile/change-password')
+async currentUserChangePassword(
+  @Req() req: any,
+  @Body() body: { currentPassword: string; newPassword: string },
+) {
+  const userId = req.user.id;
+  return this.usersService.currentUserChangePassword(
+    userId,
+    body.currentPassword,
+    body.newPassword,
+  );
+}
+
 
   @Delete(':id')
   @UseGuards(JwtGuard, AbilitiesGuard)
