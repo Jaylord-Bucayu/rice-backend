@@ -110,31 +110,19 @@ export class UsersService {
   }
 
 async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-  let objectId: ObjectId;
+  // ✅ Try to find the user by the given ID
+  //@ts-ignore
+  const user = await this.itemRepository.findOne({ where: { id } });
 
-  try {
-    // ✅ Safely construct an ObjectId (throws if invalid)
-    objectId = new ObjectId(id);
-  } catch {
-    throw new BadRequestException(`Invalid ID format: ${id}`);
-  }
-
-  // ✅ Find existing user by _id
-  const existingUser = await this.itemRepository.findOne({
-    //@ts-ignore
-    where: { _id: objectId },
-  });
-
-  if (!existingUser) {
+  if (!user) {
     throw new NotFoundException(`User not found for ID: ${id}`);
   }
 
-  // ✅ Merge updates
-  Object.assign(existingUser, updateUserDto);
-
-  // ✅ Save updates (TypeORM will perform an update, not an insert)
-  return await this.itemRepository.save(existingUser);
+  // ✅ Merge and save
+  const updatedUser = this.itemRepository.merge(user, updateUserDto);
+  return await this.itemRepository.save(updatedUser);
 }
+
 
   remove(id: number) {
     return `This action removes a #${id} user`;
