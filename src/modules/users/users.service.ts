@@ -109,19 +109,31 @@ export class UsersService {
     });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-  // ✅ Check for valid ObjectId before creating one
-  if (!Types.ObjectId.isValid(id)) {
+async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  let objectId: ObjectId;
+
+  try {
+    // ✅ Safely construct an ObjectId (throws if invalid)
+    objectId = new ObjectId(id);
+  } catch {
     throw new BadRequestException(`Invalid ID format: ${id}`);
   }
 
-  const user = await this.findOne(id);
-  if (!user) {
+  // ✅ Find existing user by _id
+  const existingUser = await this.itemRepository.findOne({
+    //@ts-ignore
+    where: { _id: objectId },
+  });
+
+  if (!existingUser) {
     throw new NotFoundException(`User not found for ID: ${id}`);
   }
 
-  Object.assign(user, updateUserDto);
-  return this.itemRepository.save(user);
+  // ✅ Merge updates
+  Object.assign(existingUser, updateUserDto);
+
+  // ✅ Save updates (TypeORM will perform an update, not an insert)
+  return await this.itemRepository.save(existingUser);
 }
 
   remove(id: number) {
