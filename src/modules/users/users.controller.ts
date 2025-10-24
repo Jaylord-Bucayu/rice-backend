@@ -92,7 +92,7 @@ async currentUserChangePassword(
 
   @Delete(':id')
   @UseGuards(JwtGuard, AbilitiesGuard)
-  @CheckAbilities({ action: Action.Delete, subject: User })
+  // @CheckAbilities({ action: Action.Delete, subject: User })
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }
