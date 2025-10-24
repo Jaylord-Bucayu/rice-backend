@@ -107,14 +107,20 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    //@ts-ignore
-    const user = await this.itemRepository.findOne({ where: { id } });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    let objectId: ObjectId;
+        try {
+          objectId = new ObjectId(id);
+        } catch (e) {
+          throw new NotFoundException(`Invalid ID format: ${id}`);
+        }
+    
+        // Find existing grain
+        const users = await this.findOne(id);
+    
+        // Apply updates
+        Object.assign(users, updateUserDto);
+        return this.itemRepository.save(users);
 
-    Object.assign(user, updateUserDto);
-    return await this.itemRepository.save(user);
   }
 
   
