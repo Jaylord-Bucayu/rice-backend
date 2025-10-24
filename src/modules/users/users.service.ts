@@ -112,7 +112,7 @@ export class UsersService {
 async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
   // ✅ Try to find the user by the given ID
   //@ts-ignore
-  const user = await this.itemRepository.findOne({ where: { id } });
+  const user = await this.findOne({ where: { id } });
 
   if (!user) {
     throw new NotFoundException(`User not found for ID: ${id}`);
