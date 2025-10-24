@@ -106,8 +106,15 @@ export class UsersService {
       where: { email}});
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    //@ts-ignore
+    const user = await this.itemRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    Object.assign(user, updateUserDto);
+    return await this.itemRepository.save(user);
   }
 
   

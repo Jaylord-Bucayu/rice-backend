@@ -54,11 +54,12 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtGuard, AbilitiesGuard)
-  @CheckAbilities({ action: Action.Update, subject: User })
+  @UseGuards(JwtGuard)
+  // @CheckAbilities({ action: Action.Update, subject: User })
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+    return this.usersService.update(id, updateUserDto);
   }
+ 
 
   @UseGuards(JwtGuard)
   @Put('profile')
@@ -66,7 +67,7 @@ export class UsersController {
     const userId = req.user.id;
     return this.usersService.updateUser(userId, updateUserDto);
   }
- 
+  
 
   @Patch(':id/reset-password')
 async resetPassword(@Param('id') id: string) {
