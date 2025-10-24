@@ -7,6 +7,8 @@ import { EntityManager, FindManyOptions, Like, ObjectId, Repository } from 'type
 import { classToPlain } from 'class-transformer';
 import { GetUsersFilterDto } from './dto/filter-user.dto';
 import * as bcrypt from 'bcrypt';
+import { Types } from 'mongoose';
+
 
 @Injectable()
 export class UsersService {
@@ -15,7 +17,7 @@ export class UsersService {
     @InjectRepository(User)
     private readonly itemRepository: Repository<User>,
     // private readonly entityManager: EntityManager,
-  ) {}
+  ) { }
 
   async create(createUserDto: CreateUserDto) {
 
@@ -24,10 +26,10 @@ export class UsersService {
     if (existingUser) {
       throw new Error('User with this email already exists');
     }
-   
+
     const newUser = new User({ ...createUserDto });
     await this.itemRepository.save(newUser);
-     return newUser;
+    return newUser;
   }
   async findAll(filterDto: GetUsersFilterDto): Promise<any> {
     const { search, role, page, per_page, sort, from, to, firstname, middlename, lastname, email } = filterDto;
@@ -100,46 +102,38 @@ export class UsersService {
     return classToPlain(user);
   }
 
-  async findOneEmail(email:string){
+  async findOneEmail(email: string) {
 
     return await this.itemRepository.findOne({
-      where: { email}});
+      where: { email }
+    });
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    let objectId: ObjectId;
-        try {
-          objectId = new ObjectId(id);
-        } catch (e) {
-          throw new NotFoundException(`Invalid ID format: ${id}`);
-        }
-    
-        // Find existing grain
-        const users = await this.findOne(id);
-    
-        // Apply updates
-        Object.assign(users, updateUserDto);
-        return this.itemRepository.save(users);
-
+  // ✅ Check for valid ObjectId before creating one
+  if (!Types.ObjectId.isValid(id)) {
+    throw new BadRequestException(`Invalid ID format: ${id}`);
   }
 
-  
+  const user = await this.findOne(id);
+  if (!user) {
+    throw new NotFoundException(`User not found for ID: ${id}`);
+  }
+
+  Object.assign(user, updateUserDto);
+  return this.itemRepository.save(user);
+}
 
   remove(id: number) {
     return `This action removes a #${id} user`;
   }
 
-  
-  createFromFile(){
-
-  }
-
   async updateUserPassword(userId: string, hashedPassword: string) {
-     await this.itemRepository.update(userId, { password: hashedPassword });
-     return 'Reset password successfully'
+    await this.itemRepository.update(userId, { password: hashedPassword });
+    return 'Reset password successfully'
   }
 
-// ✅ Update user
+  // ✅ Update user
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     //@ts-ignore
     const user = await this.itemRepository.findOne({ where: { id } });
@@ -151,11 +145,11 @@ export class UsersService {
     return await this.itemRepository.save(user);
   }
 
-  async currentUser(user:any){
-    return await this.itemRepository.findOneBy({email:user.email});
+  async currentUser(user: any) {
+    return await this.itemRepository.findOneBy({ email: user.email });
   }
 
-   async currentUserChangePassword(
+  async currentUserChangePassword(
     userId: string,
     currentPassword: string,
     newPassword: string,
