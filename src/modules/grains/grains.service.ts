@@ -37,45 +37,57 @@ async create(createGrainDto: CreateGrainDto): Promise<Grain> {
   return this.grainRepository.save(grain);
 }
 
-// async findAll(
-//   start_date?: string,
-//   end_date?: string,
-//   status?: string,
-//   cropping?: number,
-//   cropping_year?: number
-// ): Promise<Grain[]> {
-//   let where: any = {};
-
-//   // ✅ Status filter
-//   if (status) {
-//     where.status = status;
-//   }
-
-//   // ✅ Cropping filter logic
-//   if (cropping == 1 || cropping == 2) {
-//     where.cropping = Number(cropping);
-//   } else if (cropping === 3 || cropping === undefined) {
-//     if (start_date || end_date) {
-//       const start = new Date(start_date);
-//       const end = end_date ? new Date(end_date) : new Date(start_date);
-//       end.setUTCHours(23, 59, 59, 999);
-
-//       where.createdAt = {
-//         $gte: start,
-//         $lte: end,
-//       };
-//     }
-//   }
-
-//   // ✅ Cropping year filter
-//   if (cropping_year) {
-//     where.cropping_year = Number(cropping_year);
-//   }
-
-//   return this.grainRepository.find({ where });
-// }
-
 async findAll(
+  start_date?: string,
+  end_date?: string,
+  status?: string,
+  cropping?: number,
+  cropping_year?: number
+): Promise<any[]> {
+  let where: any = {};
+
+  // ✅ Status filter
+  if (status) {
+    where.status = status;
+  }
+
+  // ✅ Cropping filter logic
+  if (cropping == 1 || cropping == 2) {
+    where.cropping = Number(cropping);
+  } else if (cropping === 3 || cropping === undefined) {
+    if (start_date || end_date) {
+      const start = new Date(start_date);
+      const end = end_date ? new Date(end_date) : new Date(start_date);
+      end.setUTCHours(23, 59, 59, 999);
+
+      where.createdAt = {
+        $gte: start,
+        $lte: end,
+      };
+    }
+  }
+
+  // ✅ Cropping year filter
+  if (cropping_year) {
+    where.cropping_year = Number(cropping_year);
+  }
+  const totals = await this.grainRepository
+  .createQueryBuilder('grain')
+  .select('SUM(grain.weight)', 'totalWeight')
+  .addSelect('SUM(grain.price)', 'totalPrice')
+  .getRawOne();
+
+  const grains =  this.grainRepository.find({ where });
+
+  return {
+    //@ts-ignore
+    data: grains,
+    totals,
+};
+
+}
+
+/*async findAll(
   start_date?: string,
   end_date?: string,
   status?: string,
@@ -110,13 +122,8 @@ async findAll(
     where.cropping_year = Number(cropping_year);
   }
 
-  // ✅ Get MongoDB collection from TypeORM repository
-  const mongoRepo = this.grainRepository.manager.connection.getMongoRepository(Grain);
-  //@ts-ignore
-  const collection = mongoRepo.collection;
-
-  // ✅ Use MongoDB aggregation for totals
-  const pipeline = [
+  // ✅ Use aggregation for totals
+  const pipeline: any[] = [
     { $match: where },
     {
       $group: {
@@ -130,7 +137,7 @@ async findAll(
     },
   ];
 
-  const [totalsResult] = await collection.aggregate(pipeline).toArray();
+  const [totalsResult] = await this.grainRepository.aggregate(pipeline).toArray();
 
   const totals = totalsResult
     ? {
@@ -148,12 +155,12 @@ async findAll(
         total_gross: 0,
       };
 
-  // ✅ Fetch filtered data separately
+  // ✅ Fetch filtered data separately (paginated if needed)
   const data = await this.grainRepository.find({ where });
 
   return { data, totals };
 }
-
+*/
 
 
 
