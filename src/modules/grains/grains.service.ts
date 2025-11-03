@@ -43,49 +43,76 @@ async findAll(
   status?: string,
   cropping?: number,
   cropping_year?: number
-): Promise<any[]> {
-  let where: any = {};
+): Promise<{
+  data: Grain[]
+  totals: {
+    totalSacks: number
+    totalKilos: number
+    totalIncome: number
+    totalExpenses: number
+    totalGross: number
+    count: number
+  }
+}> {
+  const where: any = {}
 
   // ✅ Status filter
   if (status) {
-    where.status = status;
+    where.status = status
   }
 
   // ✅ Cropping filter logic
-  if (cropping == 1 || cropping == 2) {
-    where.cropping = Number(cropping);
+  if (cropping === 1 || cropping === 2) {
+    where.cropping = Number(cropping)
   } else if (cropping === 3 || cropping === undefined) {
     if (start_date || end_date) {
-      const start = new Date(start_date);
-      const end = end_date ? new Date(end_date) : new Date(start_date);
-      end.setUTCHours(23, 59, 59, 999);
+      const start = new Date(start_date)
+      const end = end_date ? new Date(end_date) : new Date(start_date)
+      end.setUTCHours(23, 59, 59, 999)
 
       where.createdAt = {
         $gte: start,
         $lte: end,
-      };
+      }
     }
   }
 
   // ✅ Cropping year filter
   if (cropping_year) {
-    where.cropping_year = Number(cropping_year);
+    where.cropping_year = Number(cropping_year)
   }
-  const totals = await this.grainRepository
-  .createQueryBuilder('grain')
-  .select('SUM(grain.weight)', 'totalWeight')
-  .addSelect('SUM(grain.price)', 'totalPrice')
-  .getRawOne();
 
-  const grains =  this.grainRepository.find({ where });
+  // ✅ Fetch data
+  const grains = await this.grainRepository.find({ where })
+
+  // ✅ Compute totals using reduce
+  const totals = grains.reduce(
+    (acc, g) => {
+      acc.totalSacks += g.total_sacks ?? 0
+      acc.totalKilos += g.total_kilos ?? 0
+      acc.totalIncome += Number(g.total_income ?? 0)
+      acc.totalExpenses += Number(g.total_expenses ?? 0)
+      acc.totalGross += Number(g.total_gross ?? 0)
+      return acc
+    },
+    {
+      totalSacks: 0,
+      totalKilos: 0,
+      totalIncome: 0,
+      totalExpenses: 0,
+      totalGross: 0,
+    },
+  )
 
   return {
-    //@ts-ignore
     data: grains,
-    totals,
-};
-
+    totals: {
+      ...totals,
+      count: grains.length,
+    },
+  }
 }
+
 
 /*async findAll(
   start_date?: string,
