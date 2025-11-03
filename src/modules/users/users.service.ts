@@ -110,28 +110,24 @@ export class UsersService {
   }
 
 async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-  // ✅ Try to find the user by the given ID
-  //@ts-ignore
-  const user = await this.findOne({ where: { id } });
-
-  if (!user) {
-    throw new NotFoundException(`User not found for ID: ${id}`);
+  const result = await this.itemRepository.update(id, updateUserDto);
+  if (result.affected === 0) {
+    throw new NotFoundException(`User with ID ${id} not found`);
   }
 
-  // ✅ Merge and save
-  const updatedUser = this.itemRepository.merge(user, updateUserDto);
-  return await this.itemRepository.save(updatedUser);
+  // Return the updated record
+  //@ts-ignore
+  return await this.itemRepository.find({ where: { id } });
 }
 
-
-  remove(id: number) {
+remove(id: number) {
     return `This action removes a #${id} user`;
-  }
+}
 
-  async updateUserPassword(userId: string, hashedPassword: string) {
+async updateUserPassword(userId: string, hashedPassword: string) {
     await this.itemRepository.update(userId, { password: hashedPassword });
     return 'Reset password successfully'
-  }
+}
 
   // ✅ Update user
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {

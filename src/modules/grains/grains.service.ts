@@ -37,14 +37,52 @@ async create(createGrainDto: CreateGrainDto): Promise<Grain> {
   return this.grainRepository.save(grain);
 }
 
+// async findAll(
+//   start_date?: string,
+//   end_date?: string,
+//   status?: string,
+//   cropping?: number,
+//   cropping_year?: number
+// ): Promise<Grain[]> {
+//   let where: any = {};
+
+//   // ✅ Status filter
+//   if (status) {
+//     where.status = status;
+//   }
+
+//   // ✅ Cropping filter logic
+//   if (cropping == 1 || cropping == 2) {
+//     where.cropping = Number(cropping);
+//   } else if (cropping === 3 || cropping === undefined) {
+//     if (start_date || end_date) {
+//       const start = new Date(start_date);
+//       const end = end_date ? new Date(end_date) : new Date(start_date);
+//       end.setUTCHours(23, 59, 59, 999);
+
+//       where.createdAt = {
+//         $gte: start,
+//         $lte: end,
+//       };
+//     }
+//   }
+
+//   // ✅ Cropping year filter
+//   if (cropping_year) {
+//     where.cropping_year = Number(cropping_year);
+//   }
+
+//   return this.grainRepository.find({ where });
+// }
+
 async findAll(
   start_date?: string,
   end_date?: string,
   status?: string,
   cropping?: number,
   cropping_year?: number
-): Promise<Grain[]> {
-  let where: any = {};
+): Promise<{ data: Grain[]; totals: any }> {
+  const where: any = {};
 
   // ✅ Status filter
   if (status) {
@@ -72,9 +110,49 @@ async findAll(
     where.cropping_year = Number(cropping_year);
   }
 
-  return this.grainRepository.find({ where });
-}
+  // ✅ Get MongoDB collection from TypeORM repository
+  const mongoRepo = this.grainRepository.manager.connection.getMongoRepository(Grain);
+  //@ts-ignore
+  const collection = mongoRepo.collection;
 
+  // ✅ Use MongoDB aggregation for totals
+  const pipeline = [
+    { $match: where },
+    {
+      $group: {
+        _id: null,
+        total_sacks: { $sum: '$total_sacks' },
+        total_kilos: { $sum: '$total_kilos' },
+        total_income: { $sum: '$total_income' },
+        total_expenses: { $sum: '$total_expenses' },
+        total_gross: { $sum: '$total_gross' },
+      },
+    },
+  ];
+
+  const [totalsResult] = await collection.aggregate(pipeline).toArray();
+
+  const totals = totalsResult
+    ? {
+        total_sacks: totalsResult.total_sacks || 0,
+        total_kilos: totalsResult.total_kilos || 0,
+        total_income: totalsResult.total_income || 0,
+        total_expenses: totalsResult.total_expenses || 0,
+        total_gross: totalsResult.total_gross || 0,
+      }
+    : {
+        total_sacks: 0,
+        total_kilos: 0,
+        total_income: 0,
+        total_expenses: 0,
+        total_gross: 0,
+      };
+
+  // ✅ Fetch filtered data separately
+  const data = await this.grainRepository.find({ where });
+
+  return { data, totals };
+}
 
 
 

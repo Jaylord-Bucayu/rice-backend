@@ -14,6 +14,7 @@ import { GrainsModule } from './modules/grains/grains.module';
 import { TrackingsModule } from './modules/tracking/tracking.module';
 import { TotalsModule } from './modules/totals/totals.module';
 import { UsersModule } from './modules/users/users.module';
+// import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 
 
 @Module({
@@ -27,7 +28,8 @@ import { UsersModule } from './modules/users/users.module';
     GrainsModule,
     TrackingsModule,
     TotalsModule,
-    UsersModule
+    UsersModule,
+    //AuditLogsModule
   ],
   controllers: [AppController],
   providers: [
