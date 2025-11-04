@@ -94,6 +94,7 @@ export class UsersService {
       total_pages: Math.ceil(total / pageSize),
     };
   }
+
   async findOne(id: any): Promise<any> {
     const user = await this.itemRepository.findOneBy(id);
     if (!user) {
@@ -129,8 +130,8 @@ async updateUserPassword(userId: string, hashedPassword: string) {
     return 'Reset password successfully'
 }
 
-  // ✅ Update user
-  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+// ✅ Update user
+async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     //@ts-ignore
     const user = await this.itemRepository.findOne({ where: { id } });
     if (!user) {
@@ -139,11 +140,11 @@ async updateUserPassword(userId: string, hashedPassword: string) {
 
     Object.assign(user, updateUserDto);
     return await this.itemRepository.save(user);
-  }
+}
 
-  async currentUser(user: any) {
+async currentUser(user: any) {
     return await this.itemRepository.findOneBy({ email: user.email });
-  }
+}
 
   async currentUserChangePassword(
     userId: string,
