@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
-import { Grain } from './entities/grain.entity';
+import { Grain, GrainStatus } from './entities/grain.entity';
 import { CreateGrainDto } from './dto/create-grain.dto';
 import { UpdateGrainDto } from './dto/update-grain.dto';
 import { ObjectId } from 'mongodb';
@@ -13,22 +13,30 @@ export class GrainsService {
     private readonly grainRepository: Repository<Grain>,
   ) { }
 
+  
 async create(createGrainDto: CreateGrainDto): Promise<Grain> {
-  // ✅ Compute total_income = kilos × price_per_kilo
-  const total_income =
+  // ✅ Base income
+  const total_gross =
     createGrainDto.total_kilos * createGrainDto.price_per_kilo;
 
-  // ✅ Compute total_expenses from expenses[]
+  // ✅ Total expenses
   const total_expenses =
     createGrainDto.expenses?.reduce((sum, exp) => sum + exp.amount, 0) ?? 0;
 
-  // ✅ Compute total_gross = income + expenses
-  const total_gross = total_income + total_expenses;
+  // ✅ Compute total_gross based on status
+  let total_net = total_gross;
 
-  // ✅ Include cropping_year directly
+  if (createGrainDto.status === GrainStatus.BUY) {
+    total_net = total_gross - total_expenses;
+  }
+
+  if (createGrainDto.status === GrainStatus.SELL) {
+    total_net = total_gross + total_expenses;
+  }
+
   const grain = this.grainRepository.create({
     ...createGrainDto,
-    total_income,
+    total_net,
     total_expenses,
     total_gross,
     cropping_year: createGrainDto.cropping_year,
@@ -36,6 +44,7 @@ async create(createGrainDto: CreateGrainDto): Promise<Grain> {
 
   return this.grainRepository.save(grain);
 }
+
 
 async findAll(
   start_date?: string,
@@ -48,9 +57,9 @@ async findAll(
   totals: {
     totalSacks: number
     totalKilos: number
-    totalIncome: number
-    totalExpenses: number
     totalGross: number
+    totalExpenses: number
+    totalNet: number
     count: number
   }
 }> {
@@ -90,17 +99,17 @@ async findAll(
     (acc, g) => {
       acc.totalSacks += g.total_sacks ?? 0
       acc.totalKilos += g.total_kilos ?? 0
-      acc.totalIncome += Number(g.total_income ?? 0)
-      acc.totalExpenses += Number(g.total_expenses ?? 0)
       acc.totalGross += Number(g.total_gross ?? 0)
+      acc.totalExpenses += Number(g.total_expenses ?? 0)
+      acc.totalNet += Number(g.total_net ?? 0)
       return acc
     },
     {
       totalSacks: 0,
       totalKilos: 0,
-      totalIncome: 0,
-      totalExpenses: 0,
       totalGross: 0,
+      totalExpenses: 0,
+      totalNet: 0,
     },
   )
 
@@ -228,7 +237,7 @@ async findAll(
 
     // ✅ Always recalc total_income
     if (grain.total_kilos && grain.price_per_kilo) {
-      grain.total_income = grain.total_kilos * grain.price_per_kilo;
+      grain.total_gross = grain.total_kilos * grain.price_per_kilo;
     }
 
     // ✅ Always recalc total_expenses
@@ -236,7 +245,7 @@ async findAll(
       grain.expenses?.reduce((sum, exp) => sum + exp.amount, 0) ?? 0;
 
     // ✅ Always recalc total_profit
-    grain.total_gross = grain.total_income + grain.total_expenses;
+    grain.total_net = grain.total_gross + grain.total_expenses;
 
     return this.grainRepository.save(grain);
   }
@@ -283,9 +292,9 @@ async findByIds(ids: string[]) {
 
   // 🧮 Compute summary totals
   const summary = {
-    total_income: grains.reduce((sum, g) => sum + (g.total_income || 0), 0),
-    total_expenses: grains.reduce((sum, g) => sum + (g.total_expenses || 0), 0),
     total_gross: grains.reduce((sum, g) => sum + (g.total_gross || 0), 0),
+    total_expenses: grains.reduce((sum, g) => sum + (g.total_expenses || 0), 0),
+    total_net: grains.reduce((sum, g) => sum + (g.total_net || 0), 0),
     total_kilos: grains.reduce((sum, g) => sum + (g.total_kilos || 0), 0),
     price_per_kilo: grains.reduce((sum, g) => sum + (g.price_per_kilo || 0), 0),
  

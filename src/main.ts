@@ -5,10 +5,16 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api', { exclude: ['auth'] });
+  // app.enableCors({
+  //   origin:'*',
+  //    //origin: 'https://north-link-corporation.vercel.app', // your frontend URL
+  //   //credentials: true, // allow cookies
+  // });
   app.enableCors({
-     origin: 'https://north-link-corporation.vercel.app', // your frontend URL
-    credentials: true, // allow cookies
-  });
+  // Use the exact URL from your error message (http://localhost:5173)
+  origin: 'http://localhost:5173', 
+  credentials: true,
+});
   await app.listen(3000);
   
 }

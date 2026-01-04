@@ -1,13 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { GrainsService } from './grains.service';
 import { CreateGrainDto } from './dto/create-grain.dto';
 import { UpdateGrainDto } from './dto/update-grain.dto';
+import { JwtGuard } from 'src/common/guards/jwt.guard';
 
 @Controller('grains')
 export class GrainsController {
   constructor(private readonly grainsService: GrainsService) { }
 
+  
   @Post()
+  // @UseGuards(JwtGuard)
   create(@Body() createGrainDto: CreateGrainDto) {
     return this.grainsService.create(createGrainDto);
   }

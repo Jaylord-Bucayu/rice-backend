@@ -110,28 +110,28 @@ export class UsersService {
     });
   }
 
-async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-  const result = await this.itemRepository.update(id, updateUserDto);
-  if (result.affected === 0) {
-    throw new NotFoundException(`User with ID ${id} not found`);
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const result = await this.itemRepository.update(id, updateUserDto);
+    if (result.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    // Return the updated record
+    //@ts-ignore
+    return await this.itemRepository.find({ where: { id } });
   }
 
-  // Return the updated record
-  //@ts-ignore
-  return await this.itemRepository.find({ where: { id } });
-}
-
-remove(id: number) {
+  remove(id: number) {
     return `This action removes a #${id} user`;
-}
+  }
 
-async updateUserPassword(userId: string, hashedPassword: string) {
+  async updateUserPassword(userId: string, hashedPassword: string) {
     await this.itemRepository.update(userId, { password: hashedPassword });
     return 'Reset password successfully'
-}
+  }
 
-// ✅ Update user
-async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  // ✅ Update user
+  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     //@ts-ignore
     const user = await this.itemRepository.findOne({ where: { id } });
     if (!user) {
@@ -140,11 +140,11 @@ async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
 
     Object.assign(user, updateUserDto);
     return await this.itemRepository.save(user);
-}
+  }
 
-async currentUser(user: any) {
+  async currentUser(user: any) {
     return await this.itemRepository.findOneBy({ email: user.email });
-}
+  }
 
   async currentUserChangePassword(
     userId: string,

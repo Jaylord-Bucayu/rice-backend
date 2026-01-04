@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Grain } from '../grains/entities/grain.entity';
+import { Grain, GrainStatus } from '../grains/entities/grain.entity';
 import { Tracking } from '../tracking/entities/tracking.entity';
 import { TotalsQueryDto } from './dto/total.dto';
 
@@ -51,42 +51,84 @@ export class TotalsService {
     },
   };
 
+  let freightData:any[] = await this.trackingRepository.find({ where});
+
   if (grain_type) {
     where.grain_type = grain_type;
   }
 
-  let data: any[] = [];
+  // if (classifier === "grain") {
+  //   data = await this.grainRepository.find({ where });
+  // } else if (classifier === "tracking") {
+  //   data = await this.trackingRepository.find({ where });
+  // } else {
+  //   throw new BadRequestException(
+  //     "Invalid classifier. Use 'grain' or 'tracking'",
+  //   );
+  // }
 
-  if (classifier === "grain") {
-    data = await this.grainRepository.find({ where });
-  } else if (classifier === "tracking") {
-    data = await this.trackingRepository.find({ where });
-  } else {
-    throw new BadRequestException(
-      "Invalid classifier. Use 'grain' or 'tracking'",
-    );
-  }
+   let data:any[] = await this.grainRepository.find({ where });
+   
+
+  //Total Buy
+  const total_buy_income = data
+  .filter(item => item.status === GrainStatus.BUY)
+  .reduce((sum, item) => sum + (Number(item.total_net) || 0), 0);
+
+  //Total Sell
+  const total_sell_income = data
+  .filter(item => item.status === GrainStatus.SELL)
+  .reduce((sum, item) => sum + (Number(item.total_net) || 0), 0);
+
+   //Total Freight
+  const total_freight = freightData
+  .reduce((sum, item) => sum + (Number(item.total_profit) || 0), 0);
+
+   //Total Profit
+  const total_profit = (total_sell_income - total_buy_income) + total_freight;
+
+
+
 
   // ✅ Aggregate totals
   const totals = data.reduce(
-    (acc, item) => {
-      acc.total_sacks += item.total_sacks || 0;
-      acc.total_kilos += item.total_kilos || 0;
-      acc.total_income += Number(item.total_income) || 0; 
-      acc.total_expenses += Number(item.total_expenses) || 0;
-      acc.total_gross += Number(item.total_gross) || 0;
-      return acc;
-    },
-    {
-      total_sacks: 0,
-      total_kilos: 0,
-      total_income: 0,
-      total_expenses: 0,
-      total_gross: 0,
-    },
-  );
+  (acc, item) => {
+    acc.total_sacks += item.total_sacks || 0;
+    acc.total_kilos += item.total_kilos || 0;
+    acc.total_income += Number(item.total_income) || 0;
+    acc.total_expenses += Number(item.total_expenses) || 0;
+    acc.total_gross += Number(item.total_gross) || 0;
 
-  return totals;
+    // ✅ BUY / SELL totals
+    if (item.status === GrainStatus.BUY) {
+      acc.total_buy += Number(item.total_income) || 0;
+    }
+
+    if (item.status === GrainStatus.SELL) {
+      acc.total_sell += Number(item.total_income) || 0;
+    }
+
+    return acc;
+  },
+  {
+    total_sacks: 0,
+    total_kilos: 0,
+    total_income: 0,
+    total_expenses: 0,
+    total_gross: 0,
+    total_buy: 0,
+    total_sell: 0,
+  },
+);
+
+return {
+  ...totals,
+  total_buy_income,
+  total_sell_income,
+  total_freight,
+  total_profit
+};
+
 }
 
 async getTotalsByGrainType(params: {
@@ -126,8 +168,8 @@ async getTotalsByGrainType(params: {
     grouped[type].total_sacks += item.total_sacks || 0;
     grouped[type].total_kilos += item.total_kilos || 0;
     grouped[type].total_expenses += Number(item.total_expenses) || 0;
-    grouped[type].total_income += Number(item.total_income) || 0;
     grouped[type].total_gross += Number(item.total_gross) || 0;
+    grouped[type].total_net += Number(item.total_net) || 0;
   });
 
   return Object.values(grouped);

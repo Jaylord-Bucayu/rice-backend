@@ -14,7 +14,9 @@ import { GrainsModule } from './modules/grains/grains.module';
 import { TrackingsModule } from './modules/tracking/tracking.module';
 import { TotalsModule } from './modules/totals/totals.module';
 import { UsersModule } from './modules/users/users.module';
-// import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
+import { AuditModule } from './modules/audit-logs/audit-logs.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
+import { InventoryHistoryModule } from './modules/inventory-history/inventory-history.module';
 
 
 @Module({
@@ -29,7 +31,9 @@ import { UsersModule } from './modules/users/users.module';
     TrackingsModule,
     TotalsModule,
     UsersModule,
-    //AuditLogsModule
+    AuditModule,
+    InventoryModule,
+    InventoryHistoryModule
   ],
   controllers: [AppController],
   providers: [

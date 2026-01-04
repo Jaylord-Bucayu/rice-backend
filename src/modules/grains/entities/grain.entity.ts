@@ -21,7 +21,7 @@ export class Grain extends AbstractEntity<Grain> {
   price_per_kilo: number
 
   @Column('decimal', { precision: 12, scale: 2 })
-  total_income: number // renamed from total_price
+  total_gross: number // renamed from total_price
 
   @Column('json', { nullable: true })
   expenses: { title: string; amount: number }[]
@@ -45,5 +45,5 @@ export class Grain extends AbstractEntity<Grain> {
   status: GrainStatus
 
   @Column('decimal', { precision: 12, scale: 2 })
-  total_gross: number // renamed from total_income
+  total_net: number // renamed from total_income
 }
