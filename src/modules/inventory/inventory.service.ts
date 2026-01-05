@@ -105,9 +105,29 @@ export class InventoryService {
     });
   }
 
-  // DELETE
   async remove(id: string): Promise<void> {
-    const item = await this.findOne(id);
-    await this.inventoryRepo.remove(item);
+  const objectId = new ObjectId(id);
+
+  const item = await this.inventoryRepo.findOne({
+    //@ts-ignore
+    where: { _id: objectId },
+  });
+
+  if (!item) {
+    throw new NotFoundException(`Inventory #${id} not found`);
   }
+
+ 
+  // ✅ SAFE: delete ONLY matching history
+  await this.historyRepo.manager
+    .getMongoRepository('inventory_history')
+    .deleteMany({ inventoryId: objectId });
+
+  // ✅ SAFE: delete inventory
+  await this.inventoryRepo.manager
+    .getMongoRepository('inventory')
+    .deleteOne({ _id: objectId });
+    
+  console.log(item)
+}
 }
