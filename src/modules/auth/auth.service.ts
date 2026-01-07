@@ -16,6 +16,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { SignInUser } from '../users/dto/signIn-user.dto';
 import { jwtConstants } from 'src/common/constants/constants';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +25,7 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     private usersService: UsersService,
     private jwtService: JwtService,
+    private readonly auditLogsService: AuditLogsService,
 
     private readonly entityManager: EntityManager,
   ) {}
@@ -79,6 +81,21 @@ export class AuthService {
     const refreshToken =  this.jwtService.sign(payload , {expiresIn:'7d'})
     this.userRepository.update(validUser.id,{token:refreshToken})
     
+    // ✅ AUDIT LOG — SUCCESSFUL LOGIN
+  await this.auditLogsService.logAction(
+    'LOGIN_SUCCESS',
+    'User',
+    validUser.id,
+    {
+      email: validUser.email,
+      role: validUser.role,
+    },
+    {
+      id: validUser.id,
+      username: validUser.email, // or username field if you have one
+    },
+  );
+  
      return {
       current_user:{
         "id": validUser.id,
