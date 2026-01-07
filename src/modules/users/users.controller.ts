@@ -34,6 +34,21 @@ export class UsersController {
     private abilityFactory: AbilityFactory,
   ) {}
 
+  @UseGuards(JwtGuard)
+@Put('profile/change-password')
+async currentUserChangePassword(
+  @Req() req: any,
+  @Body() body: { currentPassword: string; newPassword: string },
+) {
+  const userId = req.user.id;
+
+  return this.usersService.currentUserChangePassword(
+    userId,
+    body.currentPassword,
+    body.newPassword,
+  );
+}
+
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
@@ -75,20 +90,7 @@ async resetPassword(@Param('id') id: string) {
   return this.usersService.updateUserPassword(id, hashed);
 }
 
-@UseGuards(JwtGuard)
-@Put('/auth/profile/change-password')
-async currentUserChangePassword(
-  @Req() req: any,
-  @Body() body: { currentPassword: string; newPassword: string },
-) {
-  const userId = req.user.id;
 
-  return this.usersService.currentUserChangePassword(
-    userId,
-    body.currentPassword,
-    body.newPassword,
-  );
-}
 
 
   @Delete(':id')
