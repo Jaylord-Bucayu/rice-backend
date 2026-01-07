@@ -5,16 +5,20 @@ import { Grain, GrainStatus } from './entities/grain.entity';
 import { CreateGrainDto } from './dto/create-grain.dto';
 import { UpdateGrainDto } from './dto/update-grain.dto';
 import { ObjectId } from 'mongodb';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Injectable()
 export class GrainsService {
   constructor(
     @InjectRepository(Grain)
     private readonly grainRepository: Repository<Grain>,
+    private readonly auditLogsService: AuditLogsService,
   ) { }
 
   
-async create(createGrainDto: CreateGrainDto): Promise<Grain> {
+async create(createGrainDto: CreateGrainDto,
+  user: any, // or @Req() req in controller
+  ): Promise<Grain> {
   // ✅ Base income
   const total_gross =
     createGrainDto.total_kilos * createGrainDto.price_per_kilo;
@@ -42,7 +46,29 @@ async create(createGrainDto: CreateGrainDto): Promise<Grain> {
     cropping_year: createGrainDto.cropping_year,
   });
 
-  return this.grainRepository.save(grain);
+  // ✅ SAVE FIRST
+  const savedGrain = await this.grainRepository.save(grain);
+
+  // ✅ AUDIT LOG — CREATE GRAIN
+  await this.auditLogsService.logAction(
+    'CREATE_GRAIN',
+    'Grain',
+    //@ts-ignore
+    savedGrain.id, // ✅ ENTITY ID
+    {
+      total_gross,
+      total_net,
+      total_expenses,
+      status: savedGrain.status,
+    },
+    {
+      id: user.id,
+      username: user.email, // or username
+    },
+  );
+
+
+  return savedGrain;
 }
 
 
@@ -221,7 +247,7 @@ async findAll(
     return grain;
   }
 
-  async update(id: string, updateGrainDto: UpdateGrainDto): Promise<Grain> {
+  async update(id: string, updateGrainDto: UpdateGrainDto,user:any): Promise<Grain> {
     let objectId: ObjectId;
     try {
       objectId = new ObjectId(id);
@@ -247,10 +273,25 @@ async findAll(
     // ✅ Always recalc total_profit
     grain.total_net = grain.total_gross + grain.total_expenses;
 
-    return this.grainRepository.save(grain);
+    const savedGrain = await this.grainRepository.save(grain);
+
+    // ✅ AUDIT LOG — CREATE GRAIN
+  await this.auditLogsService.logAction(
+    'UPDATE_GRAIN',
+    'Grain',
+    //@ts-ignore
+    savedGrain.id, // ✅ ENTITY ID
+    savedGrain,
+    {
+      id: user.id,
+      username: user.email, // or username
+    },
+  );
+
+    return savedGrain;
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string,user:any): Promise<void> {
     let objectId: ObjectId;
     try {
       objectId = new ObjectId(id);
@@ -259,6 +300,19 @@ async findAll(
     }
 
     const result = await this.grainRepository.delete(objectId);
+
+    // ✅ AUDIT LOG — DELETE GRAIN
+  await this.auditLogsService.logAction(
+    'DELETE_GRAIN',
+    'Grain',
+    //@ts-ignore
+    id, // ✅ ENTITY ID
+    result,
+    {
+      id: user.id,
+      username: user.email, // or username
+    },
+  );
 
     if (result.affected === 0) {
       throw new NotFoundException(`Grain with ID ${id} not found`);

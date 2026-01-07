@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
 import { GrainsService } from './grains.service';
 import { CreateGrainDto } from './dto/create-grain.dto';
 import { UpdateGrainDto } from './dto/update-grain.dto';
 import { JwtGuard } from 'src/common/guards/jwt.guard';
+import { SignInUser } from '../users/dto/signIn-user.dto';
 
 @Controller('grains')
 export class GrainsController {
@@ -10,9 +11,16 @@ export class GrainsController {
 
   
   @Post()
-  // @UseGuards(JwtGuard)
-  create(@Body() createGrainDto: CreateGrainDto) {
-    return this.grainsService.create(createGrainDto);
+  @UseGuards(JwtGuard)
+  create(@Body() createGrainDto: CreateGrainDto,@Req() req:SignInUser) {
+    
+    const user = req.user;
+        if(!req.user)  {
+           throw new UnauthorizedException('Unauthorized');
+        }
+
+    return this.grainsService.create(createGrainDto, user);
+
   }
 
   @Get()
@@ -33,13 +41,26 @@ export class GrainsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateGrainDto: UpdateGrainDto) {
-    return this.grainsService.update(id, updateGrainDto);
+    @UseGuards(JwtGuard)
+  update(@Param('id') id: string, @Body() updateGrainDto: UpdateGrainDto,@Req() req:SignInUser) {
+     const user = req.user;
+        if(!req.user)  {
+           throw new UnauthorizedException('Unauthorized');
+        }
+
+    return this.grainsService.update(id, updateGrainDto,user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.grainsService.remove(id);
+    @UseGuards(JwtGuard)
+  remove(@Param('id') id: string,@Req() req:SignInUser) {
+    const user = req.user;
+        if(!req.user)  {
+           throw new UnauthorizedException('Unauthorized');
+        }
+
+
+    return this.grainsService.remove(id,user);
   }
 
   // 🆕 POST /grains/bulk
