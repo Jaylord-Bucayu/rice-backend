@@ -11,8 +11,6 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleAuthStrategy } from './strategies/google.strategy';
 import { FacebookAuthStrategy } from './strategies/facebook.strategy';
-import { AuditLog } from '../audit-logs/entities/audit-log.entity';
-import { AuditLogsService } from '../audit-logs/audit-logs.service';
 // import { APP_GUARD } from '@nestjs/core';
 // import { JwtGuard } from 'src/common/guards/jwt.guard';
 
@@ -20,7 +18,7 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
 @Module({
   controllers: [AuthController],
   imports: [
-   TypeOrmModule.forFeature([User,AuditLog]),
+   TypeOrmModule.forFeature([User]),
     UsersModule,
     PassportModule,
     JwtModule.register({
@@ -28,7 +26,7 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
       signOptions: { expiresIn: '1d' },
     }),
   ],
-  providers: [AuthService, LocalStrategy,JwtStrategy,GoogleAuthStrategy,FacebookAuthStrategy,AuditLogsService
+  providers: [AuthService, LocalStrategy,JwtStrategy,GoogleAuthStrategy,FacebookAuthStrategy
    
   ],
   
