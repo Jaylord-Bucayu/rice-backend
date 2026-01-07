@@ -34,7 +34,8 @@ export class UsersController {
     private abilityFactory: AbilityFactory,
   ) {}
 
-  @UseGuards(JwtGuard)
+
+@UseGuards(JwtGuard)
 @Put('profile/change-password')
 async currentUserChangePassword(
   @Req() req: any,
