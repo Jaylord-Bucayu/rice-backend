@@ -11,6 +11,7 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleAuthStrategy } from './strategies/google.strategy';
 import { FacebookAuthStrategy } from './strategies/facebook.strategy';
+import { AuditModule } from '../audit-logs/audit-logs.module';
 // import { APP_GUARD } from '@nestjs/core';
 // import { JwtGuard } from 'src/common/guards/jwt.guard';
 
@@ -20,6 +21,7 @@ import { FacebookAuthStrategy } from './strategies/facebook.strategy';
   imports: [
    TypeOrmModule.forFeature([User]),
     UsersModule,
+    AuditModule,
     PassportModule,
     JwtModule.register({
       secret: jwtConstants.secret,
