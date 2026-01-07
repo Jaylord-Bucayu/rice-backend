@@ -12,6 +12,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleAuthStrategy } from './strategies/google.strategy';
 import { FacebookAuthStrategy } from './strategies/facebook.strategy';
 import { AuditLog } from '../audit-logs/entities/audit-log.entity';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 // import { APP_GUARD } from '@nestjs/core';
 // import { JwtGuard } from 'src/common/guards/jwt.guard';
 
@@ -27,7 +28,7 @@ import { AuditLog } from '../audit-logs/entities/audit-log.entity';
       signOptions: { expiresIn: '1d' },
     }),
   ],
-  providers: [AuthService, LocalStrategy,JwtStrategy,GoogleAuthStrategy,FacebookAuthStrategy
+  providers: [AuthService, LocalStrategy,JwtStrategy,GoogleAuthStrategy,FacebookAuthStrategy,AuditLogsService
    
   ],
   
