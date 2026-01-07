@@ -14,7 +14,7 @@ export class AuditLogsService {
     action: string,
     entity: string,
     entityId: string,
-    data: Record<string, any>,
+    data: any,
     user?: { id?: string; username?: string },
   ) {
     const audit = this.auditRepository.create({

@@ -1,10 +1,9 @@
+import { AbstractEntity } from 'src/common/database/abstract.entity';
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
 @Entity('audit_logs')
-export class AuditLog {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class AuditLog extends AbstractEntity<AuditLog> {
+  
   @Column()
   action: string; // e.g. 'CREATE_USER', 'UPDATE_GRAIN'
 
@@ -15,7 +14,7 @@ export class AuditLog {
   entityId: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  data: Record<string, any>;
+  data: any;
 
   @Column({ nullable: true })
   userId: string;
@@ -23,6 +22,4 @@ export class AuditLog {
   @Column({ nullable: true })
   username: string;
 
-  @CreateDateColumn()
-  createdAt: Date;
 }
