@@ -42,7 +42,6 @@ async currentUserChangePassword(
   @Body() body: { currentPassword: string; newPassword: string },
 ) {
   const userId = req.user.id;
-  console.log({user:req.user})
 
   return this.usersService.currentUserChangePassword(
     userId,
