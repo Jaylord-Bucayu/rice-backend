@@ -152,7 +152,7 @@ export class UsersService {
     newPassword: string,
   ) {
     //@ts-ignore
-    const user = await this.itemRepository.findOne({ where: { _id: userId } });
+    const user = await this.itemRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
     const isMatch = await bcrypt.compare(currentPassword, user.password);

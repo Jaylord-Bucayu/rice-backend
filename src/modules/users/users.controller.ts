@@ -27,35 +27,6 @@ import { SortDto } from './dto/sort-user.dto';
 import { GetUsersFilterDto } from './dto/filter-user.dto';
 import * as bcrypt from 'bcrypt';
 
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  Req,
-  Put,
-  UnauthorizedException,
-  Query,
-} from '@nestjs/common';
-import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { AbilityFactory, Action } from '../ability/ability.factory';
-import { JwtGuard } from 'src/common/guards/jwt.guard';
-import { ForbiddenError } from '@casl/ability';
-import { User } from './entities/user.entity';
-import { Request } from 'express';
-import { AbilitiesGuard } from 'src/common/guards/abilities.guard';
-import { CheckAbilities } from 'src/common/decorators/ability.decorator';
-import { SignInUser } from './dto/signIn-user.dto';
-import { SortDto } from './dto/sort-user.dto';
-import { GetUsersFilterDto } from './dto/filter-user.dto';
-import * as bcrypt from 'bcrypt';
-
 @Controller('users')
 export class UsersController {
   constructor(
@@ -111,7 +82,7 @@ async currentUserChangePassword(
   @Body() body: { currentPassword: string; newPassword: string },
 ) {
   const userId = req.user.id;
-  console.log({userId})
+
   return this.usersService.currentUserChangePassword(
     userId,
     body.currentPassword,
