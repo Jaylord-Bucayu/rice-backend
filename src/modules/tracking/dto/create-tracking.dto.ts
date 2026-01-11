@@ -72,6 +72,9 @@ export class CreateTrackingDto {
   price_per_kilo: number;
 
   @IsNumber()
+  selling_price_per_kilo:number;
+
+  @IsNumber()
   total_income: number;
 
   @IsArray()

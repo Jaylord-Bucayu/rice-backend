@@ -16,6 +16,9 @@ export class Tracking extends AbstractEntity<Tracking> {
   price_per_kilo: number;
 
   @Column()
+  selling_price_per_kilo: number;
+
+  @Column()
   total_income: number; // was total_price
 
   @Column('json', { nullable: true })

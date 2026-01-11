@@ -20,7 +20,7 @@ export class TrackingsService {
     tracking.total_backload_amount = this.computeBackloadTotal(tracking.backload);
 
     // 💰 Compute total income
-    tracking.total_income = tracking.total_kilos * tracking.price_per_kilo;
+    tracking.total_income = tracking.total_kilos * tracking.selling_price_per_kilo;
 
     // 💸 Compute total expenses
     tracking.total_expenses = tracking.expenses?.length
@@ -97,7 +97,7 @@ export class TrackingsService {
 
     // 🧮 Recompute totals
     tracking.total_backload_amount = this.computeBackloadTotal(tracking.backload);
-    tracking.total_income = tracking.total_kilos * tracking.price_per_kilo;
+    tracking.total_income = tracking.total_kilos * tracking.selling_price_per_kilo;
     tracking.total_expenses = tracking.expenses?.length
       ? tracking.expenses.reduce((sum, exp) => sum + exp.amount, 0)
       : 0;
