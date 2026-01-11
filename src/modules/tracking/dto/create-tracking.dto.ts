@@ -59,6 +59,9 @@ export class CreateTrackingDto {
   @IsString()
   grain_type: string;
 
+  @IsString()
+  location: string;
+
   @IsNumber()
   total_sacks: number;
 

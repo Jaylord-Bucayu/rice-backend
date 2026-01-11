@@ -27,6 +27,9 @@ export class Tracking extends AbstractEntity<Tracking> {
   @Column()
   total_profit: number; // was total_earning
 
+  @Column()
+  location: string; 
+
   // 🚚 Truck stored as JSON
   @Column('json')
   truck: {
