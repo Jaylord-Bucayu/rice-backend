@@ -135,23 +135,43 @@ private normalizeBackload(backload?: {
   }
 
   async update(id: string, updateTrackingDto: UpdateTrackingDto): Promise<Tracking> {
-    const tracking = await this.findOne(id);
+  const tracking = await this.findOne(id);
 
-    // 🧩 Apply updates
-    Object.assign(tracking, updateTrackingDto);
+  // 1️⃣ Apply updates
+  Object.assign(tracking, updateTrackingDto);
 
-    // 🧮 Recompute totals
-    tracking.total_backload_amount = this.computeBackloadTotal(tracking.backload);
-    tracking.total_income = tracking.total_kilos * tracking.selling_price_per_kilo;
-    tracking.total_expenses = tracking.expenses?.length
-      ? tracking.expenses.reduce((sum, exp) => sum + exp.amount, 0)
-      : 0;
-    tracking.total_profit =
-      tracking.total_income + tracking.total_backload_amount - tracking.total_expenses;
+  // 2️⃣ Normalize backload if provided
+  if (updateTrackingDto.backload) {
+    const normalizedBackload = this.normalizeBackload(updateTrackingDto.backload);
+    //@ts-ignore
+    tracking.backload = normalizedBackload;
 
-    // 💾 Save updates
-    return this.trackingRepository.save(tracking);
+    // 3️⃣ Compute total backload amount
+    tracking.total_backload_amount =
+      Number(normalizedBackload.cement.total ?? 0) +
+      Number(normalizedBackload.abono.total ?? 0) +
+      Number(normalizedBackload.hardware.total ?? 0);
   }
+
+  // 4️⃣ Compute total income
+  tracking.total_income =
+    Number(tracking.total_kilos ?? 0) *
+    Number(tracking.selling_price_per_kilo ?? 0);
+
+  // 5️⃣ Compute total expenses
+  tracking.total_expenses = tracking.expenses?.reduce(
+    (sum, exp) => sum + Number(exp.amount ?? 0),
+    0
+  ) ?? 0;
+
+  // 6️⃣ Compute total profit
+  tracking.total_profit =
+    tracking.total_income + (tracking.total_backload_amount ?? 0) - tracking.total_expenses;
+
+  // 7️⃣ Save updates
+  return this.trackingRepository.save(tracking);
+}
+
 
   async remove(id: string): Promise<void> {
     let objectId: ObjectId;
