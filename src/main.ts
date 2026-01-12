@@ -10,11 +10,14 @@ async function bootstrap() {
   //    //origin: 'https://north-link-corporation.vercel.app', // your frontend URL
   //   //credentials: true, // allow cookies
   // });
-  app.enableCors({
-  // Use the exact URL from your error message (http://localhost:5173)
-  origin: 'https://north-link-corporation.vercel.app', 
+app.enableCors({
+  origin: [
+    'http://localhost:5173',
+    'https://north-link-corporation.vercel.app',
+  ],
   credentials: true,
 });
+
   await app.listen(3000);
   
 }
