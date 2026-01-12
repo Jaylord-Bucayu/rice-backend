@@ -13,44 +13,37 @@ export class TrackingsService {
     private readonly trackingRepository: Repository<Tracking>,
   ) {}
 
-  async create(createTrackingDto: CreateTrackingDto): Promise<Tracking> {
+async create(createTrackingDto: CreateTrackingDto): Promise<Tracking> {
   // 1️⃣ Create entity from DTO (raw values only)
   const tracking = this.trackingRepository.create(createTrackingDto);
 
-  // 2️⃣ Normalize backload (quantity × price → amount)
-  const normalizedBackload = this.normalizeBackload(
-    createTrackingDto.backload
-  );
+  // 2️⃣ Normalize backload and keep full structure (quantity, price, total)
+  const backload = this.normalizeBackload(createTrackingDto.backload);
+  tracking.backload = backload;
 
-  //@ts-ignore
-  tracking.backload = normalizedBackload;
-
-  // 3️⃣ Compute BACKLOAD TOTAL (from normalized amounts)
-  const totalBackloadAmount =
-    Number(normalizedBackload.cement_amount ?? 0) +
-    Number(normalizedBackload.abono_amount ?? 0) +
-    Number(normalizedBackload.hardware_amount ?? 0);
-
-  tracking.total_backload_amount = totalBackloadAmount;
+  // 3️⃣ Compute BACKLOAD TOTAL
+  tracking.total_backload_amount =
+    (backload.cement.total ?? 0) +
+    (backload.abono.total ?? 0) +
+    (backload.hardware.total ?? 0);
 
   // 4️⃣ Compute total income
-  const totalIncome =
-    Number(createTrackingDto.total_kilos ?? 0) *
-    Number(createTrackingDto.selling_price_per_kilo ?? 0);
-
-  tracking.total_income = totalIncome;
+  tracking.total_income =
+    (createTrackingDto.total_kilos ?? 0) *
+    (createTrackingDto.selling_price_per_kilo ?? 0);
 
   // 5️⃣ Compute total expenses
-  const totalExpenses = createTrackingDto.expenses?.reduce(
-    (sum, exp) => sum + Number(exp.amount ?? 0),
-    0
-  ) ?? 0;
-
-  tracking.total_expenses = totalExpenses;
+  tracking.total_expenses =
+    createTrackingDto.expenses?.reduce(
+      (sum, exp) => sum + Number(exp.amount ?? 0),
+      0
+    ) ?? 0;
 
   // 6️⃣ Compute total profit
   tracking.total_profit =
-    totalIncome + totalBackloadAmount - totalExpenses;
+    tracking.total_income +
+    tracking.total_backload_amount -
+    tracking.total_expenses;
 
   // 7️⃣ Save
   return this.trackingRepository.save(tracking);
@@ -61,15 +54,23 @@ private normalizeBackload(backload?: {
   abono?: { quantity?: number; price?: number };
   hardware?: { quantity?: number; price?: number };
 }) {
-  const calc = (item?: { quantity?: number; price?: number }) =>
-    Number(item?.quantity ?? 0) * Number(item?.price ?? 0);
+  const calcItem = (item?: { quantity?: number; price?: number }) => {
+    const quantity = Number(item?.quantity ?? 0);
+    const price = Number(item?.price ?? 0);
+    return {
+      quantity,
+      price,
+      total: quantity * price,
+    };
+  };
 
   return {
-    cement_amount: calc(backload?.cement),
-    abono_amount: calc(backload?.abono),
-    hardware_amount: calc(backload?.hardware),
+    cement: calcItem(backload?.cement),
+    abono: calcItem(backload?.abono),
+    hardware: calcItem(backload?.hardware),
   };
 }
+
 
 
   private computeBackloadTotal(backload?: {
