@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { CreateTrackingDto } from './dto/create-tracking.dto';
 import { UpdateTrackingDto } from './dto/update-tracking.dto';
-import { TrackingsService } from './tracking.service';
+import { TrackingService } from './tracking.service';
 
 @Controller('trackings')
-export class TrackingsController {
-  constructor(private readonly trackingsService: TrackingsService) { }
+export class TrackingController {
+  constructor(private readonly trackingsService: TrackingService) { }
 
   @Post()
   create(@Body() createTrackingDto: CreateTrackingDto) {

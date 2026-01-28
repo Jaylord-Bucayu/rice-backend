@@ -1,8 +1,8 @@
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateInventoryDto {
-  @IsEnum(['Abono', 'Gamot'])
-  type: 'Abono' | 'Gamot';
+  @IsEnum(['Abono', 'Gamot', 'Sako', 'Bini'])
+  type: 'Abono' | 'Gamot' | 'Sako' | 'Bini';
 
   @IsNotEmpty()
   name: string;

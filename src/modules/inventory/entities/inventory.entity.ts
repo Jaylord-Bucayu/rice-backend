@@ -5,8 +5,8 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 export class Inventory extends AbstractEntity<Inventory> {
   @PrimaryGeneratedColumn()
 
-  @Column({ type: 'enum', enum: ['Abono', 'Gamot'] })
-  type: 'Abono' | 'Gamot';
+  @Column({ type: 'enum', enum: ['Abono', 'Gamot','Sako','Bini'] })
+  type: 'Abono' | 'Gamot' | 'Sako' | 'Bini';
 
   @Column()
   name: string;

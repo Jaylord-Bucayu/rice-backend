@@ -5,12 +5,15 @@ import { Tracking } from './entities/tracking.entity';
 import { CreateTrackingDto } from './dto/create-tracking.dto';
 import { UpdateTrackingDto } from './dto/update-tracking.dto';
 import { ObjectId } from 'mongodb';
+import { Expense } from '../expense/entities/expense.entity';
 
 @Injectable()
-export class TrackingsService {
+export class TrackingService {
   constructor(
     @InjectRepository(Tracking)
     private readonly trackingRepository: Repository<Tracking>,
+    @InjectRepository(Expense)
+    private readonly expenseRepository: Repository<Expense>,
   ) {}
 
 async create(createTrackingDto: CreateTrackingDto): Promise<Tracking> {
@@ -44,6 +47,14 @@ async create(createTrackingDto: CreateTrackingDto): Promise<Tracking> {
     tracking.total_income +
     tracking.total_backload_amount -
     tracking.total_expenses;
+
+
+    // 2️⃣ Save expense (NO relation)
+  const expense = this.expenseRepository.create({
+    amount: tracking.total_profit,
+  });
+
+  await this.expenseRepository.save(expense);
 
   // 7️⃣ Save
   return this.trackingRepository.save(tracking);

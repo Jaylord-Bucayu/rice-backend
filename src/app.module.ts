@@ -14,11 +14,10 @@ import { GrainsModule } from './modules/grains/grains.module';
 import { TrackingsModule } from './modules/tracking/tracking.module';
 import { TotalsModule } from './modules/totals/totals.module';
 import { UsersModule } from './modules/users/users.module';
-
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { InventoryHistoryModule } from './modules/inventory-history/inventory-history.module';
 import { AuditModule } from './modules/audit-logs/audit-logs.module';
-
+import { ExpenseModule } from './modules/expense/expense.module';
 
 @Module({
   imports: [
@@ -34,7 +33,8 @@ import { AuditModule } from './modules/audit-logs/audit-logs.module';
     UsersModule,
     AuditModule,
     InventoryModule,
-    InventoryHistoryModule
+    InventoryHistoryModule,
+    ExpenseModule
   ],
   controllers: [AppController],
   providers: [

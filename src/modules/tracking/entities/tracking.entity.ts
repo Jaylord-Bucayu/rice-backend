@@ -33,6 +33,19 @@ export class Tracking extends AbstractEntity<Tracking> {
   @Column()
   location: string; 
 
+  // 💳 NEW: Payment method
+  @Column({ type: 'varchar', length: 50 })
+  payment_method: string; 
+  // examples: CASH, GCASH, BANK_TRANSFER, CHECK
+
+  // 🧾 NEW: Reference number
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  reference_no?: string;
+
+    // 🧾 NEW: Remarks
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  remarks?: string;
+
   // 🚚 Truck stored as JSON
   @Column('json')
   truck: {

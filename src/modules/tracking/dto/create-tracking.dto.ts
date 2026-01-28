@@ -1,12 +1,14 @@
-import { 
-  IsString, 
-  IsNumber, 
-  IsArray, 
-  ValidateNested, 
-  IsOptional, 
-  IsObject 
+import {
+  IsString,
+  IsNumber,
+  IsArray,
+  ValidateNested,
+  IsOptional,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+
+/* ----------------- Sub DTOs ----------------- */
 
 export class ExpenseDto {
   @IsString()
@@ -55,6 +57,19 @@ export class BackloadDto {
   hardware: BackloadItemDto;
 }
 
+/* ----------------- Payment ----------------- */
+
+export enum PaymentMethod {
+  CASH = 'CASH',
+  GCASH = 'GCASH',
+  MAYA = 'MAYA',
+  BANK_TRANSFER = 'BANK_TRANSFER',
+  CHECK = 'CHECK',
+  OTHERS = 'OTHERS',
+}
+
+/* ----------------- Main DTO ----------------- */
+
 export class CreateTrackingDto {
   @IsString()
   grain_type: string;
@@ -72,10 +87,24 @@ export class CreateTrackingDto {
   price_per_kilo: number;
 
   @IsNumber()
-  selling_price_per_kilo:number;
+  selling_price_per_kilo: number;
 
   @IsNumber()
   total_income: number;
+
+  /* 💳 NEW */
+  @IsEnum(PaymentMethod)
+  payment_method: PaymentMethod;
+
+  /* 🧾 NEW */
+  @IsOptional()
+  @IsString()
+  reference_no?: string;
+
+  /* 🧾 NEW */
+  @IsOptional()
+  @IsString()
+  remarks?: string;
 
   @IsArray()
   @ValidateNested({ each: true })
