@@ -1,11 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { CreateTrackingDto } from './dto/create-tracking.dto';
 import { UpdateTrackingDto } from './dto/update-tracking.dto';
 import { TrackingService } from './tracking.service';
 
 @Controller('trackings')
 export class TrackingController {
-  constructor(private readonly trackingsService: TrackingService) { }
+  constructor(private readonly trackingsService: TrackingService) {}
 
   @Post()
   create(@Body() createTrackingDto: CreateTrackingDto) {
@@ -13,9 +22,20 @@ export class TrackingController {
   }
 
   @Get()
-  findAll(@Query('start_date') start_date?: string,
-    @Query('end_date') end_date?: string,) {
+  findAll(
+    @Query('start_date') start_date?: string,
+    @Query('end_date') end_date?: string,
+  ) {
     return this.trackingsService.findAll(start_date, end_date);
+  }
+
+  // 🔥 NEW: totals endpoint
+  @Get('totals')
+  getTotals(
+    @Query('start_date') start_date?: string,
+    @Query('end_date') end_date?: string,
+  ) {
+    return this.trackingsService.getTotals(start_date, end_date);
   }
 
   @Get(':id')
@@ -24,7 +44,10 @@ export class TrackingController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTrackingDto: UpdateTrackingDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateTrackingDto: UpdateTrackingDto,
+  ) {
     return this.trackingsService.update(id, updateTrackingDto);
   }
 

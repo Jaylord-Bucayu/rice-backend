@@ -197,4 +197,58 @@ private normalizeBackload(backload?: {
       throw new NotFoundException(`Tracking with ID ${id} not found`);
     }
   }
+
+    async getTotals(start_date?: string, end_date?: string) {
+    const match: any = {};
+
+    if (start_date || end_date) {
+      const start = new Date(start_date);
+      let end: Date;
+
+      if (end_date) {
+        end = new Date(end_date);
+      } else {
+        end = new Date(start_date);
+      }
+
+      end.setUTCHours(23, 59, 59, 999);
+
+      match.createdAt = {
+        $gte: start,
+        $lte: end,
+      };
+    }
+
+    // MongoDB aggregation
+    //@ts-ignore
+    const result = await this.trackingRepository.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: null,
+          total_income: { $sum: '$total_income' },
+          total_expenses: { $sum: '$total_expenses' },
+          total_profit: { $sum: '$total_profit' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          total_income: 1,
+          total_expenses: 1,
+          total_profit: 1,
+        },
+      },
+    ]).toArray();
+
+    return (
+      result[0] ?? {
+        total_income: 0,
+        total_expenses: 0,
+        total_profit: 0,
+      }
+    );
+  }
+
+
 }
