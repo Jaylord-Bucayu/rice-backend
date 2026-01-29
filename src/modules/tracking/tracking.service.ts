@@ -221,25 +221,32 @@ private normalizeBackload(backload?: {
 
     // MongoDB aggregation
     //@ts-ignore
-    const result = await this.trackingRepository.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: null,
-          total_income: { $sum: '$total_income' },
-          total_expenses: { $sum: '$total_expenses' },
-          total_profit: { $sum: '$total_profit' },
-        },
+const result = await this.trackingRepository.aggregate([
+  { $match: match },
+  {
+    $group: {
+      _id: null,
+      total_income: {
+        $sum: { $ifNull: ['$total_income', 0] },
       },
-      {
-        $project: {
-          _id: 0,
-          total_income: 1,
-          total_expenses: 1,
-          total_profit: 1,
-        },
+      total_expenses: {
+        $sum: { $ifNull: ['$total_expenses', 0] },
       },
-    ]).toArray();
+      total_profit: {
+        $sum: { $ifNull: ['$total_profit', 0] },
+      },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      total_income: 1,
+      total_expenses: 1,
+      total_profit: 1,
+    },
+  },
+]).toArray();
+
 
     return (
       result[0] ?? {
