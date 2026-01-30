@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { Grain, GrainStatus } from './entities/grain.entity';
@@ -356,6 +356,70 @@ async findByIds(ids: string[]) {
 
   return { grains, summary };
 }
+
+async getGrainSummaryByStatus(
+  status: GrainStatus,
+  start_date?: string,
+  end_date?: string,
+) {
+  if (!Object.values(GrainStatus).includes(status)) {
+    throw new BadRequestException('Invalid grain status');
+  }
+
+  let where: any = { status };
+
+  if (start_date || end_date) {
+    const start = new Date(start_date);
+    let end = end_date ? new Date(end_date) : new Date(start_date);
+    end.setUTCHours(23, 59, 59, 999);
+
+    where.createdAt = {1
+      $gte: start,
+      $lte: end,
+    };
+  }
+
+  const records = await this.grainRepository.find({ where });
+
+  if (!records.length) {
+    return {
+      status,
+      total_kilos: 0,
+      average_price: 0,
+      total_expenses: 0,
+      average_gross: 0,
+    };
+  }
+
+  let totalKilos = 0;
+  let totalExpenses = 0;
+  let totalPrice = 0;
+  let priceCount = 0;
+
+  for (const item of records) {
+    totalKilos += Number(item.total_kilos) || 0;
+    totalExpenses += Number(item.total_expenses) || 0;
+
+    if (item.price_per_kilo !== null && item.price_per_kilo !== undefined) {
+      totalPrice += Number(item.price_per_kilo) || 0;
+      priceCount++;
+    }
+  }
+
+  const averagePrice = priceCount > 0 ? totalPrice / priceCount : 0;
+  const averageGross = totalKilos * averagePrice;
+
+  return {
+    status,
+    total_kilos: totalKilos,
+    average_price: Number(averagePrice.toFixed(2)),
+    total_expenses: totalExpenses,
+    average_gross: Number(averageGross.toFixed(2)),
+  };
+}
+
+
+
 
 
 }

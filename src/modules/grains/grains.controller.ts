@@ -4,6 +4,7 @@ import { CreateGrainDto } from './dto/create-grain.dto';
 import { UpdateGrainDto } from './dto/update-grain.dto';
 import { JwtGuard } from 'src/common/guards/jwt.guard';
 import { SignInUser } from '../users/dto/signIn-user.dto';
+import { GrainStatus } from './entities/grain.entity';
 
 @Controller('grains')
 export class GrainsController {
@@ -69,5 +70,19 @@ export class GrainsController {
   async findByIds(@Body('ids') ids: string[]) {
     return this.grainsService.findByIds(ids);
   }
+
+  @Get(':status/summary')
+  getSummaryByStatus(
+    @Param('status') status: GrainStatus,
+    @Query('start_date') start_date?: string,
+    @Query('end_date') end_date?: string,
+  ) {
+    return this.grainsService.getGrainSummaryByStatus(
+      status,
+      start_date,
+      end_date,
+    );
+  }
+
 
 }

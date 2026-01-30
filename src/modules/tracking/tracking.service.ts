@@ -198,64 +198,39 @@ private normalizeBackload(backload?: {
     }
   }
 
-    async getTotals(start_date?: string, end_date?: string) {
-    const match: any = {};
+   async getTotals(start_date?: string, end_date?: string) {
+  let where: any = {};
 
-    if (start_date || end_date) {
-      const start = new Date(start_date);
-      let end: Date;
+  if (start_date || end_date) {
+    const start = new Date(start_date);
+    let end = end_date ? new Date(end_date) : new Date(start_date);
+    end.setUTCHours(23, 59, 59, 999);
 
-      if (end_date) {
-        end = new Date(end_date);
-      } else {
-        end = new Date(start_date);
-      }
-
-      end.setUTCHours(23, 59, 59, 999);
-
-      match.createdAt = {
-        $gte: start,
-        $lte: end,
-      };
-    }
-
-    // MongoDB aggregation
-    //@ts-ignore
-const result = await this.trackingRepository.aggregate([
-  { $match: match },
-  {
-    $group: {
-      _id: null,
-      total_income: {
-        $sum: { $ifNull: ['$total_income', 0] },
-      },
-      total_expenses: {
-        $sum: { $ifNull: ['$total_expenses', 0] },
-      },
-      total_profit: {
-        $sum: { $ifNull: ['$total_profit', 0] },
-      },
-    },
-  },
-  {
-    $project: {
-      _id: 0,
-      total_income: 1,
-      total_expenses: 1,
-      total_profit: 1,
-    },
-  },
-]).toArray();
-
-
-    return (
-      result[0] ?? {
-        total_income: 0,
-        total_expenses: 0,
-        total_profit: 0,
-      }
-    );
+    where.createdAt = {
+      $gte: start,
+      $lte: end,
+    };
   }
+
+  const records = await this.trackingRepository.find({ where });
+
+  const totals = records.reduce(
+    (acc, item) => {
+      acc.total_income += Number(item.total_income) || 0;
+      acc.total_expenses += Number(item.total_expenses) || 0;
+      acc.total_profit += Number(item.total_profit) || 0;
+      return acc;
+    },
+    {
+      total_income: 0,
+      total_expenses: 0,
+      total_profit: 0,
+    },
+  );
+
+  return totals;
+}
+
 
 
 }
