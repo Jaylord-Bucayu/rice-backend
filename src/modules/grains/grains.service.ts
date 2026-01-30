@@ -373,7 +373,7 @@ async getGrainSummaryByStatus(
     let end = end_date ? new Date(end_date) : new Date(start_date);
     end.setUTCHours(23, 59, 59, 999);
 
-    where.createdAt = {1
+    where.createdAt = {
       $gte: start,
       $lte: end,
     };
