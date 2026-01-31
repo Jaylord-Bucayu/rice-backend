@@ -225,6 +225,7 @@ private normalizeBackload(backload?: {
       total_income: 0,
       total_expenses: 0,
       total_profit: 0,
+      total_trips: records.length,
     },
   );
 
