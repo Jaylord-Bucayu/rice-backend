@@ -43,5 +43,25 @@ export class TotalsController {
       classifier,
     });
   }
+
+// ✅ /totals/total-expenses?start_date=2026-03-01&end_date=2026-03-22
+@Get('total-expenses')
+async getTotalExpensesPerDateRange(
+  @Query('start_date') start_date?: string,
+  @Query('end_date') end_date?: string,
+) {
+  // Optional: validate dates
+  if (start_date && isNaN(new Date(start_date).getTime())) {
+    throw new BadRequestException('Invalid start_date');
+  }
+  if (end_date && isNaN(new Date(end_date).getTime())) {
+    throw new BadRequestException('Invalid end_date');
+  }
+
+  return this.totalsService.getTotalExpensesByDateRange({
+    start_date,
+    end_date,
+  });
+}
   
 }

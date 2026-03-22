@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Grain, GrainStatus } from '../grains/entities/grain.entity';
 import { Tracking } from '../tracking/entities/tracking.entity';
 import { TotalsQueryDto } from './dto/total.dto';
+import { Expense } from '../expense/entities/expense.entity';
 
 @Injectable()
 export class TotalsService {
@@ -13,6 +14,9 @@ export class TotalsService {
 
     @InjectRepository(Tracking)
     private readonly trackingRepository: Repository<Tracking>,
+
+     @InjectRepository(Expense)
+    private readonly expensesRepository: Repository<Expense>,
   ) {}
 
  async getTotals(params: {
@@ -57,19 +61,8 @@ export class TotalsService {
     where.grain_type = grain_type;
   }
 
-  // if (classifier === "grain") {
-  //   data = await this.grainRepository.find({ where });
-  // } else if (classifier === "tracking") {
-  //   data = await this.trackingRepository.find({ where });
-  // } else {
-  //   throw new BadRequestException(
-  //     "Invalid classifier. Use 'grain' or 'tracking'",
-  //   );
-  // }
-
    let data:any[] = await this.grainRepository.find({ where });
    
-
   //Total Buy
   const total_buy_income = data
   .filter(item => item.status === GrainStatus.BUY)
@@ -86,7 +79,9 @@ export class TotalsService {
 
    //Total Profit
   const total_profit = (total_sell_income - total_buy_income) + total_freight;
-
+  
+  //Total Income
+  const total_income = total_sell_income - total_buy_income;
 
   // ✅ Aggregate totals
   const totals = data.reduce(
@@ -124,7 +119,8 @@ return {
   total_buy_income,
   total_sell_income,
   total_freight,
-  total_profit
+  total_profit,
+  total_income
 };
 
 }
@@ -286,6 +282,41 @@ async getIncomeExpensesPerMonth(params: {
   });
 
   return grouped;
+}
+
+// Change signature to accept an object
+async getTotalExpensesByDateRange(params: {
+  start_date?: string;
+  end_date?: string;
+  grain_type?: string;
+}) {
+  const { start_date, end_date, grain_type } = params;
+
+  const where: any = {};
+
+  if (start_date || end_date) {
+    const start = new Date(start_date!);
+    const end = end_date ? new Date(end_date) : new Date(start_date!);
+    end.setUTCHours(23, 59, 59, 999);
+
+    where.createdAt = { $gte: start, $lte: end };
+  }
+
+  // Optional filter
+  if (grain_type) {
+    where.grain_type = grain_type;
+  }
+
+  const expenses = await this.expensesRepository.find({ where });
+
+  const total = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+
+  return {
+    total_expenses: total,
+    count: expenses.length,
+    start_date,
+    end_date,
+  };
 }
 
 }
