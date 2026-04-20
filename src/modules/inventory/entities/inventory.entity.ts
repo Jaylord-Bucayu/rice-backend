@@ -24,9 +24,6 @@ export class Inventory extends AbstractEntity<Inventory> {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
-  @Column({ type: 'text', nullable: true })
-  notes?: string;
-
   // @Column({ type: 'decimal', precision: 12, scale: 2 })
   // total: number;
 }

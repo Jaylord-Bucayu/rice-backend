@@ -87,6 +87,7 @@ export class InventoryService {
     new_price: price,
     // old_total: oldTotal,
     // new_total: total,
+    notes: updateDto.notes,
   });
 
   await this.historyRepo.save(history);
