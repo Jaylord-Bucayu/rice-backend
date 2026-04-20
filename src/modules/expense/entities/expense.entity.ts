@@ -2,6 +2,11 @@
 import { AbstractEntity } from 'src/common/database/abstract.entity';
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
+export enum GrainStatus {
+  BUY = 'buy',
+  SELL = 'sell',
+}
+
 @Entity('expenses')
 export class Expense extends AbstractEntity<Expense>  {
   @Column('decimal', { precision: 10, scale: 2 })
@@ -9,5 +14,12 @@ export class Expense extends AbstractEntity<Expense>  {
 
   @Column({ type: 'text', nullable: true })
   remarks?: string;
+
+  @Column({
+    type: 'enum',
+    enum: GrainStatus,
+    default: GrainStatus.BUY,
+  })
+  status: GrainStatus
 
 }
