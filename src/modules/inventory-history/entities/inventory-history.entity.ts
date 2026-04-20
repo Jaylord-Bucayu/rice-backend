@@ -36,4 +36,7 @@ export class InventoryHistory extends AbstractEntity<InventoryHistory> {
 
   @CreateDateColumn()
   created_at: Date;
+
+  @Column({ type: 'text', nullable: true })
+  notes?: string;
 }

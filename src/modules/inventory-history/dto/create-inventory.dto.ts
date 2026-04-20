@@ -9,4 +9,6 @@ export class CreateInventoryHistoryDto {
 
   old_total: number;
   new_total: number;
+
+  notes?: string;
 }
