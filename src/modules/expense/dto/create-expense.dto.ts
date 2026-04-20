@@ -1,5 +1,6 @@
 // src/expenses/dto/create-expense.dto.ts
-import { IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { GrainStatus } from '../entities/expense.entity';
 
 export class CreateExpenseDto {
   @IsNumber()
@@ -12,4 +13,9 @@ export class CreateExpenseDto {
   @IsOptional()
   @IsString()
   remarks?: string;
+
+  @IsOptional()
+  @IsEnum(GrainStatus)
+  status?: GrainStatus = GrainStatus.BUY // default to "buy"
+
 }

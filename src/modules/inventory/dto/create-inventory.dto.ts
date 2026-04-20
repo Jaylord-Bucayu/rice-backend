@@ -18,4 +18,9 @@ export class CreateInventoryDto {
   @IsNumber()
   @Min(0)
   price: number;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
 }
