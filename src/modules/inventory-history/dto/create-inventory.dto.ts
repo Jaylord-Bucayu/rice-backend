@@ -4,11 +4,11 @@ export class CreateInventoryHistoryDto {
   old_quantity: number;
   new_quantity: number;
 
-  old_price: number;
-  new_price: number;
+  old_unit_cost: number;      // ✅ replaced old_price
+  new_unit_cost: number;      // ✅ replaced new_price
 
-  old_total: number;
-  new_total: number;
+  old_selling_price: number;  // ✅ added
+  new_selling_price: number;  // ✅ added
 
   notes?: string;
 }
