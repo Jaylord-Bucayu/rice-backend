@@ -17,7 +17,11 @@ export class CreateInventoryDto {
 
   @IsNumber()
   @Min(0)
-  price: number;
+  selling_price: number;
+
+  @IsNumber()
+  @Min(0)
+  unit_cost: number;
 
   @IsOptional()
   @IsString()

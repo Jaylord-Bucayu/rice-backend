@@ -21,13 +21,7 @@ export class InventoryService {
 
   // CREATE
   async create(createDto: CreateInventoryDto): Promise<Inventory> {
-    //const total = createDto.quantity * createDto.price;
-
-    const item = this.inventoryRepo.create({
-      ...createDto,
-      // total,
-    });
-
+    const item = this.inventoryRepo.create({ ...createDto });
     return this.inventoryRepo.save(item);
   }
 
@@ -39,15 +33,15 @@ export class InventoryService {
   // READ ONE
   async findOne(id: string): Promise<Inventory> {
     let objectId: ObjectId;
-    
-        try {
-          objectId = new ObjectId(id);
-        } catch (e) {
-          throw new NotFoundException(`Invalid ID format: ${id}`);
-        }
-        
+
+    try {
+      objectId = new ObjectId(id);
+    } catch (e) {
+      throw new NotFoundException(`Invalid ID format: ${id}`);
+    }
+
     const item = await this.inventoryRepo.findOne({
-     //@ts-ignore
+      //@ts-ignore
       where: { _id: objectId },
     });
 
@@ -59,41 +53,40 @@ export class InventoryService {
   }
 
   // UPDATE + HISTORY
- async update(id: string, updateDto: UpdateInventoryDto) {
-  //@ts-ignore
-  const item = await this.findOne(id);
+  async update(id: string, updateDto: UpdateInventoryDto) {
+    //@ts-ignore
+    const item = await this.findOne(id);
 
-  // SAVE OLD VALUES
-  const oldQuantity = item.quantity;
-  const oldPrice = item.price;
-  // const oldTotal = item.total;
+    // SAVE OLD VALUES ✅ updated to unit_cost & selling_price
+    const oldQuantity = item.quantity;
+    const oldUnitCost = item.unit_cost;
+    const oldSellingPrice = item.selling_price;
 
-  // APPLY UPDATES
-  const quantity = updateDto.quantity ?? item.quantity;
-  const price = updateDto.price ?? item.price;
-  const total = quantity * price;
+    // APPLY UPDATES ✅ updated to unit_cost & selling_price
+    const quantity = updateDto.quantity ?? item.quantity;
+    const unit_cost = updateDto.unit_cost ?? item.unit_cost;
+    const selling_price = updateDto.selling_price ?? item.selling_price;
 
-  Object.assign(item, updateDto);
-  // item.total = total;
+    Object.assign(item, updateDto);
 
-  await this.inventoryRepo.save(item);
+    await this.inventoryRepo.save(item);
 
-  // CREATE HISTORY (NOW MATCHES ENTITY)
-  const history = this.historyRepo.create({
-    inventoryId: item.id, // number ✅
-    old_quantity: oldQuantity,
-    new_quantity: quantity,
-    old_price: oldPrice,
-    new_price: price,
-    // old_total: oldTotal,
-    // new_total: total,
-    notes: updateDto.notes,
-  });
+    // CREATE HISTORY ✅ updated to unit_cost & selling_price
+    const history = this.historyRepo.create({
+      inventoryId: item.id,
+      old_quantity: oldQuantity,
+      new_quantity: quantity,
+      old_unit_cost: oldUnitCost,
+      new_unit_cost: unit_cost,
+      old_selling_price: oldSellingPrice,
+      new_selling_price: selling_price,
+      notes: updateDto.notes,
+    });
 
-  await this.historyRepo.save(history);
+    await this.historyRepo.save(history);
 
-  return item;
-}
+    return item;
+  }
 
   // GET HISTORY
   async getHistory(id: string): Promise<InventoryHistory[]> {
@@ -106,29 +99,27 @@ export class InventoryService {
     });
   }
 
+  // DELETE
   async remove(id: string): Promise<void> {
-  const objectId = new ObjectId(id);
+    const objectId = new ObjectId(id);
 
-  const item = await this.inventoryRepo.findOne({
-    //@ts-ignore
-    where: { _id: objectId },
-  });
+    const item = await this.inventoryRepo.findOne({
+      //@ts-ignore
+      where: { _id: objectId },
+    });
 
-  if (!item) {
-    throw new NotFoundException(`Inventory #${id} not found`);
+    if (!item) {
+      throw new NotFoundException(`Inventory #${id} not found`);
+    }
+
+    await this.historyRepo.manager
+      .getMongoRepository('inventory_history')
+      .deleteMany({ inventoryId: objectId });
+
+    await this.inventoryRepo.manager
+      .getMongoRepository('inventory')
+      .deleteOne({ _id: objectId });
+
+    console.log(item);
   }
-
- 
-  // ✅ SAFE: delete ONLY matching history
-  await this.historyRepo.manager
-    .getMongoRepository('inventory_history')
-    .deleteMany({ inventoryId: objectId });
-
-  // ✅ SAFE: delete inventory
-  await this.inventoryRepo.manager
-    .getMongoRepository('inventory')
-    .deleteOne({ _id: objectId });
-    
-  console.log(item)
-}
 }

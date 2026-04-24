@@ -11,10 +11,8 @@ import {
 @Entity('inventory_history')
 export class InventoryHistory extends AbstractEntity<InventoryHistory> {
 
-  // MUST MATCH Inventory.id TYPE
   @ObjectIdColumn()
   inventoryId: ObjectId;
-
 
   @Column('int')
   old_quantity: number;
@@ -23,16 +21,16 @@ export class InventoryHistory extends AbstractEntity<InventoryHistory> {
   new_quantity: number;
 
   @Column('decimal', { precision: 12, scale: 2 })
-  old_price: number;
+  old_unit_cost: number;       // ✅ replaced old_price
 
   @Column('decimal', { precision: 12, scale: 2 })
-  new_price: number;
+  new_unit_cost: number;       // ✅ replaced new_price
 
-//   @Column('decimal', { precision: 12, scale: 2 })
-//   old_total: number;
+  @Column('decimal', { precision: 12, scale: 2 })
+  old_selling_price: number;   // ✅ added
 
-//   @Column('decimal', { precision: 12, scale: 2 })
-//   new_total: number;
+  @Column('decimal', { precision: 12, scale: 2 })
+  new_selling_price: number;   // ✅ added
 
   @CreateDateColumn()
   created_at: Date;
