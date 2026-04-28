@@ -4,33 +4,34 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  ObjectIdColumn,
-  ObjectId,
 } from 'typeorm';
 
 @Entity('inventory_history')
 export class InventoryHistory extends AbstractEntity<InventoryHistory> {
 
-  @ObjectIdColumn()
-  inventoryId: ObjectId;
+  // ✅ match Inventory.id (number, not ObjectId)
+  @Column()
+  inventoryId: number;
 
-  @Column('int')
-  old_quantity: number;
+  // ✅ track stock change only (optional but useful)
+  @Column({ type: 'int', nullable: true })
+  old_quantity?: number;
 
-  @Column('int')
-  new_quantity: number;
+  @Column({ type: 'int', nullable: true })
+  new_quantity?: number;
 
-  @Column('decimal', { precision: 12, scale: 2 })
-  old_unit_cost: number;       // ✅ replaced old_price
+  // ❌ REMOVE these (handled by batches now)
+  // old_unit_cost
+  // new_unit_cost
+  // old_selling_price
+  // new_selling_price
 
-  @Column('decimal', { precision: 12, scale: 2 })
-  new_unit_cost: number;       // ✅ replaced new_price
+  // ✅ flexible logging instead
+  @Column({ type: 'json', nullable: true })
+  old_data?: any;
 
-  @Column('decimal', { precision: 12, scale: 2 })
-  old_selling_price: number;   // ✅ added
-
-  @Column('decimal', { precision: 12, scale: 2 })
-  new_selling_price: number;   // ✅ added
+  @Column({ type: 'json', nullable: true })
+  new_data?: any;
 
   @CreateDateColumn()
   created_at: Date;

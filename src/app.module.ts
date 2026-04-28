@@ -18,6 +18,7 @@ import { InventoryModule } from './modules/inventory/inventory.module';
 import { InventoryHistoryModule } from './modules/inventory-history/inventory-history.module';
 import { AuditModule } from './modules/audit-logs/audit-logs.module';
 import { ExpenseModule } from './modules/expense/expense.module';
+import { InventoryBatchModule } from './modules/inventory-batch/inventory-batch.module';
 
 @Module({
   imports: [
@@ -34,7 +35,8 @@ import { ExpenseModule } from './modules/expense/expense.module';
     AuditModule,
     InventoryModule,
     InventoryHistoryModule,
-    ExpenseModule
+    ExpenseModule,
+    InventoryBatchModule
   ],
   controllers: [AppController],
   providers: [

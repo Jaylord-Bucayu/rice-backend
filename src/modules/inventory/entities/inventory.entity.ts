@@ -3,7 +3,6 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Inventory extends AbstractEntity<Inventory> {
-  @PrimaryGeneratedColumn()
 
   @Column({ type: 'enum', enum: ['Abono', 'Gamot', 'Sako', 'Bini'] })
   type: 'Abono' | 'Gamot' | 'Sako' | 'Bini';
@@ -18,12 +17,14 @@ export class Inventory extends AbstractEntity<Inventory> {
   })
   img_url: string;
 
-  @Column({ type: 'int' })
+  // total available stock (sum of all batch remaining_quantity)
+  @Column({ type: 'int', default: 0 })
   quantity: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  unit_cost: number;  // ✅ added
+  // optional: for quick display (latest or average price)
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  display_unit_cost?: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  selling_price: number;  // ✅ added
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  display_selling_price?: number;
 }

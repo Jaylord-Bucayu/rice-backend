@@ -23,12 +23,14 @@ export class InventoryHistoryController {
   findByInventory(
     @Param('inventoryId') inventoryId: string,
   ) {
+    //@ts-ignore
     return this.inventoryHistoryService.findByInventory(inventoryId);
   }
 
   // GET SINGLE HISTORY RECORD
   @Get(':id')
   findOne(@Param('id') id: string) {
+    //@ts-ignore
     return this.inventoryHistoryService.findOne(id);
   }
 }
