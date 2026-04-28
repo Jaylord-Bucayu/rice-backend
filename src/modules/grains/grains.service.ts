@@ -31,11 +31,11 @@ async create(createGrainDto: CreateGrainDto,
   let total_net = total_gross;
 
   if (createGrainDto.status === GrainStatus.BUY) {
-    total_net = total_gross - total_expenses;
+    total_net = total_gross + total_expenses;
   }
 
   if (createGrainDto.status === GrainStatus.SELL) {
-    total_net = total_gross + total_expenses;
+    total_net = total_gross - total_expenses;
   }
 
   const grain = this.grainRepository.create({
@@ -81,11 +81,11 @@ async findAll(
 ): Promise<{
   data: Grain[]
   totals: {
-    totalSacks: number
-    totalKilos: number
-    totalGross: number
-    totalExpenses: number
-    totalNet: number
+    total_kilos: number
+    average_price_per_kilo: number
+    total_grain_value: number
+    total_expenses: number
+    total_gross_value: number
     count: number
   }
 }> {
@@ -120,29 +120,43 @@ async findAll(
   // ✅ Fetch data
   const grains = await this.grainRepository.find({ where })
 
-  // ✅ Compute totals using reduce
-  const totals = grains.reduce(
+  // ✅ Compute base totals using reduce
+  const { total_kilos, total_grain_value, total_expenses } = grains.reduce(
     (acc, g) => {
-      acc.totalSacks += g.total_sacks ?? 0
-      acc.totalKilos += g.total_kilos ?? 0
-      acc.totalGross += Number(g.total_gross ?? 0)
-      acc.totalExpenses += Number(g.total_expenses ?? 0)
-      acc.totalNet += Number(g.total_net ?? 0)
+      acc.total_kilos += g.total_kilos ?? 0
+      acc.total_grain_value += Number(g.total_gross ?? 0)
+      acc.total_expenses += Number(g.total_expenses ?? 0)
       return acc
     },
     {
-      totalSacks: 0,
-      totalKilos: 0,
-      totalGross: 0,
-      totalExpenses: 0,
-      totalNet: 0,
+      total_kilos: 0,
+      total_grain_value: 0,
+      total_expenses: 0,
     },
   )
+
+  // ✅ Average price per kilo (guard against division by zero)
+  const average_price_per_kilo =
+    total_kilos > 0
+      ? Number((total_grain_value / total_kilos).toFixed(2))
+      : 0
+
+  // ✅ Gross value depends on status:
+  //    sell → grain value - expenses
+  //    buy  → grain value + expenses
+  const total_gross_value =
+    status === 'sell'
+      ? total_grain_value - total_expenses
+      : total_grain_value + total_expenses
 
   return {
     data: grains,
     totals: {
-      ...totals,
+      total_kilos,
+      average_price_per_kilo,
+      total_grain_value,
+      total_expenses,
+      total_gross_value,
       count: grains.length,
     },
   }
