@@ -43,9 +43,10 @@ async getBatches(
     body: {
       inventory_id: number;
       quantity: number;
+      notes?: string
     },
   ) {
-    return this.batchService.sell(body.inventory_id, body.quantity);
+    return this.batchService.sell(body.inventory_id, body.quantity,body.notes);
   }
 
   // ✅ GET TOTAL STOCK (SAFE CHECK)
