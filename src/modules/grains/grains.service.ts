@@ -6,6 +6,7 @@ import { CreateGrainDto } from './dto/create-grain.dto';
 import { UpdateGrainDto } from './dto/update-grain.dto';
 import { ObjectId } from 'mongodb';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { Expense } from '../expense/entities/expense.entity';
 
 @Injectable()
 export class GrainsService {
@@ -13,6 +14,7 @@ export class GrainsService {
     @InjectRepository(Grain)
     private readonly grainRepository: Repository<Grain>,
     private readonly auditLogsService: AuditLogsService,
+    private readonly expenseRepository: Repository<Expense>,
   ) { }
 
   
@@ -96,19 +98,22 @@ async findAll(
     where.status = status
   }
 
-  // ✅ Cropping filter logic
+  // ✅ Date filter setup
+  let start: Date | undefined
+  let end: Date | undefined
+
+  if (start_date || end_date) {
+    start = start_date ? new Date(start_date) : new Date()
+    end = end_date ? new Date(end_date) : new Date(start)
+    end.setUTCHours(23, 59, 59, 999)
+  }
+
+  // ✅ Cropping filter
   if (cropping === 1 || cropping === 2) {
     where.cropping = Number(cropping)
   } else if (cropping === 3 || cropping === undefined) {
-    if (start_date || end_date) {
-      const start = new Date(start_date)
-      const end = end_date ? new Date(end_date) : new Date(start_date)
-      end.setUTCHours(23, 59, 59, 999)
-
-      where.createdAt = {
-        $gte: start,
-        $lte: end,
-      }
+    if (start && end) {
+      where.createdAt = Between(start, end)
     }
   }
 
@@ -117,33 +122,61 @@ async findAll(
     where.cropping_year = Number(cropping_year)
   }
 
-  // ✅ Fetch data
+  // ✅ Fetch grains
   const grains = await this.grainRepository.find({ where })
 
-  // ✅ Compute base totals using reduce
-  const { total_kilos, total_grain_value, total_expenses } = grains.reduce(
-    (acc, g) => {
-      acc.total_kilos += g.total_kilos ?? 0
-      acc.total_grain_value += Number(g.total_gross ?? 0)
-      acc.total_expenses += Number(g.total_expenses ?? 0)
-      return acc
-    },
-    {
-      total_kilos: 0,
-      total_grain_value: 0,
-      total_expenses: 0,
-    },
+  // =========================================================
+  // ✅ SELL LOGIC (use grain table expense field)
+  // =========================================================
+  const total_grain_value_sell = grains.reduce((acc, g) => {
+    return acc + Number(g.total_gross ?? 0)
+  }, 0)
+
+  const total_expenses_sell = grains.reduce((acc, g) => {
+    return acc + Number(g.total_expenses ?? 0)
+  }, 0)
+
+  // =========================================================
+  // ✅ BUY LOGIC (use Expense entity ONLY)
+  // =========================================================
+  const expenseWhere: any = {
+    status: GrainStatus.BUY,
+  }
+
+  if (start && end) {
+    expenseWhere.createdAt = Between(start, end)
+  }
+
+  const expenses = await this.expenseRepository.find({
+    where: expenseWhere,
+  })
+
+  const total_expenses_buy = expenses.reduce(
+    (sum, e) => sum + Number(e.amount),
+    0
   )
 
-  // ✅ Average price per kilo (guard against division by zero)
+  // =========================================================
+  // ✅ FINAL TOTALS (merge logic)
+  // =========================================================
+  const total_kilos = grains.reduce(
+    (acc, g) => acc + (g.total_kilos ?? 0),
+    0
+  )
+
+  const total_grain_value =
+    total_grain_value_sell // keep grain value from SELL only
+
+  const total_expenses =
+    status === 'buy'
+      ? total_expenses_buy
+      : total_expenses_sell
+
   const average_price_per_kilo =
     total_kilos > 0
       ? Number((total_grain_value / total_kilos).toFixed(2))
       : 0
 
-  // ✅ Gross value depends on status:
-  //    sell → grain value - expenses
-  //    buy  → grain value + expenses
   const total_gross_value =
     status === 'sell'
       ? total_grain_value - total_expenses
