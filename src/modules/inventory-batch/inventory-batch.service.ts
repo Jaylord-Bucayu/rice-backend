@@ -28,6 +28,7 @@ export class InventoryBatchService {
     unit_cost: number;
     selling_price: number;
     expiry_date?: Date;
+    notes?: string
   }) {
 
      let objectId: ObjectId;
@@ -86,7 +87,7 @@ export class InventoryBatchService {
         unit_cost: data.unit_cost,
         selling_price: data.selling_price,
       },
-      notes: 'Stock added via batch',
+      notes: data.notes || 'Stock added via batch',
     });
 
     return batch;
@@ -103,7 +104,7 @@ export class InventoryBatchService {
   }
 
   // ✅ SELL (FIFO)
-  async sell(inventory_id: number, sellQty: number) {
+  async sell(inventory_id: number, sellQty: number, notes?: string) {
 
     
      let objectId: ObjectId;
@@ -177,7 +178,7 @@ export class InventoryBatchService {
         total_revenue: totalRevenue,
         profit: profit,
       },
-      notes: 'Stock sold via FIFO',
+      notes: notes || 'Stock sold via FIFO',
     });
 
     return {
