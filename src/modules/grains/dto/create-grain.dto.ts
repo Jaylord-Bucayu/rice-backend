@@ -61,4 +61,10 @@ export class CreateGrainDto {
   @IsNumber()
   @Min(0)
   total_gross: number // previously total_income
+
+  @IsOptional()
+  @IsString()
+  notes: string
+
+  
 }

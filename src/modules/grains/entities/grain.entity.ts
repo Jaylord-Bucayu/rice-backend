@@ -35,8 +35,6 @@ export class Grain extends AbstractEntity<Grain> {
   @Column('int', { nullable: true })
   cropping_year: number
 
-
-
   @Column({
     type: 'enum',
     enum: GrainStatus,
@@ -46,4 +44,7 @@ export class Grain extends AbstractEntity<Grain> {
 
   @Column('decimal', { precision: 12, scale: 2 })
   total_net: number // renamed from total_income
+
+   @Column({ type: 'text', nullable: true })
+    notes?: string;
 }

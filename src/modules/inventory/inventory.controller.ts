@@ -58,4 +58,9 @@ export class InventoryController {
     //@ts-ignore
     return this.inventoryService.remove(id);
   }
+
+  @Get('get/totals')
+  getOverallTotals() {
+    return this.inventoryService.getOverallTotals();
+  }
 }

@@ -34,9 +34,58 @@ export class InventoryService {
   }
 
   // ✅ READ ALL
-  findAll(): Promise<Inventory[]> {
-    return this.inventoryRepo.find();
-  }
+ async findAll() {
+  const inventories = await this.inventoryRepo.find();
+
+  const result = await Promise.all(
+    inventories.map(async (inventory) => {
+      // ✅ Get all SELL history for this inventory
+      const sellHistories = await this.historyRepo.find({
+        where: {
+          //@ts-ignore
+          inventoryId: inventory.id,
+        },
+      });
+
+      // ✅ Filter only SELL actions and sum up profit
+      const sellRecords = sellHistories.filter(
+        (h) => h.new_data?.action === 'SELL',
+      );
+
+      const totalProfit = sellRecords.reduce(
+        (sum, h) => sum + (h.new_data?.profit || 0),
+        0,
+      );
+
+      const totalRevenue = sellRecords.reduce(
+        (sum, h) => sum + (h.new_data?.total_revenue || 0),
+        0,
+      );
+
+      const totalCost = sellRecords.reduce(
+        (sum, h) => sum + (h.new_data?.total_cost || 0),
+        0,
+      );
+
+      const totalSold = sellRecords.reduce(
+        (sum, h) => sum + (h.new_data?.quantity || 0),
+        0,
+      );
+
+      return {
+        ...inventory,
+        stats: {
+          total_sold: totalSold,
+          total_revenue: +totalRevenue.toFixed(2),
+          total_cost: +totalCost.toFixed(2),
+          total_profit: +totalProfit.toFixed(2),
+        },
+      };
+    }),
+  );
+
+  return result;
+}
 
   // ✅ READ ONE
   async findOne(id: number): Promise<Inventory> {
@@ -155,5 +204,49 @@ async remove(id: number): Promise<void> {
   // ✅ 4. delete inventory
   // =========================
   await this.inventoryRepo.delete(id);
+}
+
+
+async getOverallTotals() {
+  const inventories = await this.inventoryRepo.find();
+
+  const allHistories = await this.historyRepo.find();
+
+  const sellRecords = allHistories.filter(
+    (h) => h.new_data?.action === 'SELL',
+  );
+
+  const totalQty = inventories.reduce(
+    (sum, inv) => sum + (inv.quantity || 0),
+    0,
+  );
+
+  const totalSoldItems = sellRecords.reduce(
+    (sum, h) => sum + (h.new_data?.quantity || 0),
+    0,
+  );
+
+  const totalRevenue = sellRecords.reduce(
+    (sum, h) => sum + (h.new_data?.total_revenue || 0),
+    0,
+  );
+
+  const totalCost = sellRecords.reduce(
+    (sum, h) => sum + (h.new_data?.total_cost || 0),
+    0,
+  );
+
+  const totalProfit = sellRecords.reduce(
+    (sum, h) => sum + (h.new_data?.profit || 0),
+    0,
+  );
+
+  return {
+    total_qty: totalQty,                          // current stock remaining
+    total_sold_items: totalSoldItems,             // all units ever sold
+    total_revenue: +totalRevenue.toFixed(2),      // all sales income
+    total_cost: +totalCost.toFixed(2),            // cost of all sold goods
+    total_profit: +totalProfit.toFixed(2),        // revenue - cost
+  };
 }
 }
