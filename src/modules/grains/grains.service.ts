@@ -382,64 +382,95 @@ export class GrainsService {
     return { grains, summary };
   }
 
-  async getGrainSummaryByStatus(
-    status: GrainStatus,
-    start_date?: string,
-    end_date?: string,
-  ) {
-    if (!Object.values(GrainStatus).includes(status)) {
-      throw new BadRequestException('Invalid grain status');
-    }
+async getGrainSummaryByStatus(
+  status: GrainStatus,
+  start_date?: string,
+  end_date?: string,
+) {
+  if (!Object.values(GrainStatus).includes(status)) {
+    throw new BadRequestException('Invalid grain status');
+  }
 
-    let where: any = { status };
+  // ✅ Build date range first
+  let dateRange: { start?: Date; end?: Date } = {};
 
-    if (start_date || end_date) {
-      const start = new Date(start_date);
-      let end = end_date ? new Date(end_date) : new Date(start_date);
-      end.setUTCHours(23, 59, 59, 999);
+  if (start_date || end_date) {
+    const start = new Date(start_date);
+    const end = end_date ? new Date(end_date) : new Date(start_date);
+    end.setUTCHours(23, 59, 59, 999);
+    dateRange = { start, end };
+  }
 
-      where.createdAt = {
-        $gte: start,
-        $lte: end,
-      };
-    }
+  const where: any = { status };
 
-    const records = await this.grainRepository.find({ where });
+  if (dateRange.start && dateRange.end) {
+    where.createdAt = { $gte: dateRange.start, $lte: dateRange.end };
+  }
 
-    if (!records.length) {
-      return {
-        status,
-        total_kilos: 0,
-        average_price: 0,
-        total_expenses: 0,
-        average_gross: 0,
-      };
-    }
+  const records = await this.grainRepository.find({ where });
 
-    let totalKilos = 0;
-    let totalExpenses = 0;
-    let totalPrice = 0;
-    let priceCount = 0;
-
-    for (const item of records) {
-      totalKilos += Number(item.total_kilos) || 0;
-      totalExpenses += Number(item.total_expenses) || 0;
-
-      if (item.price_per_kilo !== null && item.price_per_kilo !== undefined) {
-        totalPrice += Number(item.price_per_kilo) || 0;
-        priceCount++;
-      }
-    }
-
-    const averagePrice = priceCount > 0 ? totalPrice / priceCount : 0;
-    const averageGross = totalKilos * averagePrice;
-
+  if (!records.length) {
     return {
       status,
-      total_kilos: totalKilos,
-      average_price: Number(averagePrice.toFixed(2)),
-      total_expenses: totalExpenses,
-      average_gross: Number(averageGross.toFixed(2)),
+      total_kilos: 0,
+      average_price_per_kilo: 0,
+      total_grain_value: 0,
+      total_expenses: 0,
+      total_gross: 0,
     };
   }
+
+  // ✅ Sum grain fields
+  let total_kilos = 0;
+  let total_grain_value = 0;
+  let totalPrice = 0;
+  let priceCount = 0;
+
+  for (const item of records) {
+    total_kilos      += Number(item.total_kilos)  || 0;
+    total_grain_value += Number(item.total_gross)  || 0; // raw grain value before expenses
+
+    if (item.price_per_kilo !== null && item.price_per_kilo !== undefined) {
+      totalPrice += Number(item.price_per_kilo) || 0;
+      priceCount++;
+    }
+  }
+
+  const average_price_per_kilo = priceCount > 0
+    ? Number((totalPrice / priceCount).toFixed(2))
+    : 0;
+
+  // ✅ Resolve total_expenses based on status
+  let total_expenses = 0;
+
+  if (status === GrainStatus.BUY) {
+    const expenseWhere: any = { status: GrainStatus.BUY };
+
+    if (dateRange.start && dateRange.end) {
+      expenseWhere.createdAt = { $gte: dateRange.start, $lte: dateRange.end };
+    }
+
+    const expenses = await this.expenseRepository.find({ where: expenseWhere });
+    total_expenses = expenses.reduce((sum, e) => sum + Number(e.amount ?? 0), 0);
+  } else {
+    for (const item of records) {
+      total_expenses += Number(item.total_expenses) || 0;
+    }
+  }
+
+  // ✅ Gross depends on status
+  const total_gross = status === GrainStatus.BUY
+    ? total_grain_value + total_expenses
+    : total_grain_value - total_expenses;
+
+  return {
+    status,
+    total_kilos,
+    average_price_per_kilo,
+    total_grain_value: Number(total_grain_value.toFixed(2)),
+    total_expenses:    Number(total_expenses.toFixed(2)),
+    total_gross:       Number(total_gross.toFixed(2)),
+  };
+}
+
 }
