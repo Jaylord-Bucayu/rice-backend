@@ -2,16 +2,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ObjectId } from 'mongodb';
 import { Expense } from './entities/expense.entity';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
+
 
 @Injectable()
 export class ExpensesService {
   constructor(
     @InjectRepository(Expense)
     private readonly expenseRepo: Repository<Expense>,
-  ) {}
+  ) { }
 
   create(dto: CreateExpenseDto) {
     const expense = this.expenseRepo.create(dto);
@@ -25,8 +27,17 @@ export class ExpensesService {
   }
 
   async findOne(id: string) {
+
+    let objectId: ObjectId;
+
+    try {
+      objectId = new ObjectId(id);
+    } catch (e) {
+      throw new NotFoundException(`Invalid ID format: ${id}`);
+    }
+
     //@ts-ignore
-    const expense = await this.expenseRepo.findOne({ where: { id } });
+    const expense = await this.expenseRepo.findOne({ where: { _id: objectId } });
     if (!expense) throw new NotFoundException('Expense not found');
     return expense;
   }
