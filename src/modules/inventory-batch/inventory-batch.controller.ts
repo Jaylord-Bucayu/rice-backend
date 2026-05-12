@@ -5,9 +5,14 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  UnauthorizedException,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 
 import { InventoryBatchService } from './inventory-batch.service';
+import { SignInUser } from '../users/dto/signIn-user.dto';
+import { JwtGuard } from 'src/common/guards/jwt.guard';
 
 @Controller('inventory-batch')
 export class InventoryBatchController {
@@ -26,7 +31,9 @@ export class InventoryBatchController {
       selling_price: number;
       expiry_date?: Date;
     },
+   
   ) {
+            
     return this.batchService.addStock(body);
   }
 
@@ -38,15 +45,22 @@ async getBatches(
 }
   // ✅ SELL (FIFO)
   @Post('sell')
+   @UseGuards(JwtGuard)
   async sell(
     @Body()
     body: {
-      inventory_id: number;
+      inventory_id: string;
       quantity: number;
       notes?: string
     },
+     @Req() req:SignInUser
   ) {
-    return this.batchService.sell(body.inventory_id, body.quantity,body.notes);
+      const user = req.user;
+            if(!req.user)  {
+               throw new UnauthorizedException('Unauthorized');
+            }
+
+    return this.batchService.sell(body.inventory_id, body.quantity,body.notes,user);
   }
 
   // ✅ GET TOTAL STOCK (SAFE CHECK)

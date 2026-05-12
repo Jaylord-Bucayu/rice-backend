@@ -386,25 +386,30 @@ async getGrainSummaryByStatus(
   status: GrainStatus,
   start_date?: string,
   end_date?: string,
+  cropping?: number,
+  cropping_year?: number,
 ) {
   if (!Object.values(GrainStatus).includes(status)) {
     throw new BadRequestException('Invalid grain status');
   }
 
-  // ✅ Build date range first
-  let dateRange: { start?: Date; end?: Date } = {};
-
-  if (start_date || end_date) {
-    const start = new Date(start_date);
-    const end = end_date ? new Date(end_date) : new Date(start_date);
-    end.setUTCHours(23, 59, 59, 999);
-    dateRange = { start, end };
-  }
-
   const where: any = { status };
 
-  if (dateRange.start && dateRange.end) {
-    where.createdAt = { $gte: dateRange.start, $lte: dateRange.end };
+  // ── Cropping filter takes priority over date range ──────────────────────
+  if (cropping === 1 || cropping === 2) {
+    where.cropping = Number(cropping);
+  } else {
+    // Fall back to date range when no specific cropping selected
+    if (start_date || end_date) {
+      const start = new Date(start_date);
+      const end = end_date ? new Date(end_date) : new Date(start_date);
+      end.setUTCHours(23, 59, 59, 999);
+      where.createdAt = { $gte: start, $lte: end };
+    }
+  }
+
+  if (cropping_year) {
+    where.cropping_year = Number(cropping_year);
   }
 
   const records = await this.grainRepository.find({ where });
@@ -420,15 +425,14 @@ async getGrainSummaryByStatus(
     };
   }
 
-  // ✅ Sum grain fields
   let total_kilos = 0;
   let total_grain_value = 0;
   let totalPrice = 0;
   let priceCount = 0;
 
   for (const item of records) {
-    total_kilos      += Number(item.total_kilos)  || 0;
-    total_grain_value += Number(item.total_gross)  || 0; // raw grain value before expenses
+    total_kilos       += Number(item.total_kilos) || 0;
+    total_grain_value += Number(item.total_gross)  || 0;
 
     if (item.price_per_kilo !== null && item.price_per_kilo !== undefined) {
       totalPrice += Number(item.price_per_kilo) || 0;
@@ -440,14 +444,21 @@ async getGrainSummaryByStatus(
     ? Number((totalPrice / priceCount).toFixed(2))
     : 0;
 
-  // ✅ Resolve total_expenses based on status
+  // ── Resolve total_expenses based on status ──────────────────────────────
   let total_expenses = 0;
 
   if (status === GrainStatus.BUY) {
     const expenseWhere: any = { status: GrainStatus.BUY };
 
-    if (dateRange.start && dateRange.end) {
-      expenseWhere.createdAt = { $gte: dateRange.start, $lte: dateRange.end };
+    // Mirror the same cropping/date logic for expenses
+    if (cropping === 1 || cropping === 2) {
+      expenseWhere.cropping = Number(cropping);
+    } else if (where.createdAt) {
+      expenseWhere.createdAt = where.createdAt;
+    }
+
+    if (cropping_year) {
+      expenseWhere.cropping_year = Number(cropping_year);
     }
 
     const expenses = await this.expenseRepository.find({ where: expenseWhere });
@@ -458,7 +469,6 @@ async getGrainSummaryByStatus(
     }
   }
 
-  // ✅ Gross depends on status
   const total_gross = status === GrainStatus.BUY
     ? total_grain_value + total_expenses
     : total_grain_value - total_expenses;

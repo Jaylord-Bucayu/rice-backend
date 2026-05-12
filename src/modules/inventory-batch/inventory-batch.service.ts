@@ -5,6 +5,7 @@ import { InventoryBatch } from './entities/inventory-batch.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
 import { ObjectId } from 'mongodb';
 import { InventoryHistory } from '../inventory-history/entities/inventory-history.entity';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 
 
@@ -19,6 +20,9 @@ export class InventoryBatchService {
 
     @InjectRepository(InventoryHistory)
     private readonly historyRepo: Repository<InventoryHistory>,
+
+    private readonly auditLogsService: AuditLogsService,
+    
   ) {}
 
   // ✅ ADD STOCK (CREATE BATCH)
@@ -104,7 +108,12 @@ export class InventoryBatchService {
   }
 
   // ✅ SELL (FIFO)
-  async sell(inventory_id: number, sellQty: number, notes?: string) {
+  async sell(
+  inventory_id: string,
+  sellQty: number,
+  notes: string | undefined,
+  user: any
+){
 
     
      let objectId: ObjectId;
@@ -130,6 +139,7 @@ export class InventoryBatchService {
      const oldQuantity = inventory.quantity;
 
     const batches = await this.batchRepo.find({
+      //@ts-ignore
       where: { inventory_id },
       order: { createdAt: 'ASC' }, // FIFO
     });
@@ -180,6 +190,26 @@ export class InventoryBatchService {
       },
       notes: notes || 'Stock sold via FIFO',
     });
+
+     // =========================
+  // ✅ AUDIT LOG
+  // =========================
+  await this.auditLogsService.logAction(
+    'SELL_INVENTORY',
+    'Inventory',
+    //@ts-ignore
+    inventory.id,
+    {
+      quantity: sellQty,
+      total_cost: totalCost,
+      total_revenue: totalRevenue,
+      profit,
+    },
+    {
+      id: user?.id,
+      username: user?.email,
+    },
+  );
 
     return {
       sold: sellQty,

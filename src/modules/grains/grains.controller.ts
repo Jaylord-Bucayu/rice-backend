@@ -71,18 +71,22 @@ export class GrainsController {
     return this.grainsService.findByIds(ids);
   }
 
-  @Get(':status/summary')
-  getSummaryByStatus(
-    @Param('status') status: GrainStatus,
-    @Query('start_date') start_date?: string,
-    @Query('end_date') end_date?: string,
-  ) {
-    return this.grainsService.getGrainSummaryByStatus(
-      status,
-      start_date,
-      end_date,
-    );
-  }
+ @Get(':status/summary')
+getSummaryByStatus(
+  @Param('status') status: GrainStatus,
+  @Query('start_date') start_date?: string,
+  @Query('end_date') end_date?: string,
+  @Query('cropping') cropping?: number,
+  @Query('cropping_year') cropping_year?: number,
+) {
+  return this.grainsService.getGrainSummaryByStatus(
+    status,
+    start_date,
+    end_date,
+    cropping ? Number(cropping) : undefined,
+    cropping_year ? Number(cropping_year) : undefined,
+  );
+}
 
 
 }

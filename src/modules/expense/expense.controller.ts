@@ -1,17 +1,25 @@
 // src/expenses/expenses.controller.ts
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
 
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { ExpensesService } from './expense.service';
+import { JwtGuard } from 'src/common/guards/jwt.guard';
+import { SignInUser } from '../users/dto/signIn-user.dto';
 
 @Controller('expenses')
 export class ExpensesController {
-  constructor(private readonly expensesService: ExpensesService) {}
+  constructor(private readonly expensesService: ExpensesService) { }
 
   @Post()
-  create(@Body() dto: CreateExpenseDto) {
-    return this.expensesService.create(dto);
+  @UseGuards(JwtGuard)
+  create(@Body() dto: CreateExpenseDto, @Req() req: SignInUser) {
+    const user = req.user;
+    if (!req.user) {
+      throw new UnauthorizedException('Unauthorized');
+    }
+
+    return this.expensesService.create(dto, user);
   }
 
   @Get()
