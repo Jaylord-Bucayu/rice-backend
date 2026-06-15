@@ -5,6 +5,7 @@ import {
   ValidateNested,
   IsOptional,
   IsEnum,
+  IsInt,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -127,4 +128,10 @@ export class CreateTrackingDto {
 
   @IsNumber()
   total_backload_amount: number;
+
+  @IsInt()
+  cropping: number // 1 or 2
+  
+  @IsInt()
+  cropping_year: number // e.g. 2025
 }

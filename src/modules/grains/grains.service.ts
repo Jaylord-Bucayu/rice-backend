@@ -399,7 +399,6 @@ async getGrainSummaryByStatus(
   if (cropping === 1 || cropping === 2) {
     where.cropping = Number(cropping);
   } else {
-    // Fall back to date range when no specific cropping selected
     if (start_date || end_date) {
       const start = new Date(start_date);
       const end = end_date ? new Date(end_date) : new Date(start_date);
@@ -412,7 +411,28 @@ async getGrainSummaryByStatus(
     where.cropping_year = Number(cropping_year);
   }
 
-  const records = await this.grainRepository.find({ where });
+  // ── Build the shared expense filter (mirrors grain filter) ──────────────
+  const buildExpenseWhere = (targetStatus: GrainStatus) => {
+    const expenseWhere: any = { status: targetStatus };
+
+    if (cropping === 1 || cropping === 2) {
+      expenseWhere.cropping = Number(cropping);
+    } else if (where.createdAt) {
+      expenseWhere.createdAt = where.createdAt;
+    }
+
+    if (cropping_year) {
+      expenseWhere.cropping_year = Number(cropping_year);
+    }
+
+    return expenseWhere;
+  };
+
+  // ── Fetch grain records + expenses in parallel ──────────────────────────
+  const [records, expenses] = await Promise.all([
+    this.grainRepository.find({ where }),
+    this.expenseRepository.find({ where: buildExpenseWhere(status) }),
+  ]);
 
   if (!records.length) {
     return {
@@ -425,6 +445,7 @@ async getGrainSummaryByStatus(
     };
   }
 
+  // ── Accumulate grain totals ─────────────────────────────────────────────
   let total_kilos = 0;
   let total_grain_value = 0;
   let totalPrice = 0;
@@ -434,9 +455,12 @@ async getGrainSummaryByStatus(
     total_kilos       += Number(item.total_kilos) || 0;
     total_grain_value += Number(item.total_gross)  || 0;
 
-    if (item.price_per_kilo !== null && item.price_per_kilo !== undefined) {
-      totalPrice += Number(item.price_per_kilo) || 0;
-      priceCount++;
+    if (item.price_per_kilo != null) {
+      const ppk = Number(item.price_per_kilo);
+      if (!isNaN(ppk)) {
+        totalPrice += ppk;
+        priceCount++;
+      }
     }
   }
 
@@ -444,31 +468,14 @@ async getGrainSummaryByStatus(
     ? Number((totalPrice / priceCount).toFixed(2))
     : 0;
 
-  // ── Resolve total_expenses based on status ──────────────────────────────
-  let total_expenses = 0;
+  // ── Expenses now come from the repository for both BUY and SELL ─────────
+  const total_expenses = expenses.reduce(
+    (sum, e) => sum + (Number(e.amount) || 0),
+    0,
+  );
 
-  if (status === GrainStatus.BUY) {
-    const expenseWhere: any = { status: GrainStatus.BUY };
-
-    // Mirror the same cropping/date logic for expenses
-    if (cropping === 1 || cropping === 2) {
-      expenseWhere.cropping = Number(cropping);
-    } else if (where.createdAt) {
-      expenseWhere.createdAt = where.createdAt;
-    }
-
-    if (cropping_year) {
-      expenseWhere.cropping_year = Number(cropping_year);
-    }
-
-    const expenses = await this.expenseRepository.find({ where: expenseWhere });
-    total_expenses = expenses.reduce((sum, e) => sum + Number(e.amount ?? 0), 0);
-  } else {
-    for (const item of records) {
-      total_expenses += Number(item.total_expenses) || 0;
-    }
-  }
-
+  // BUY: cost + expenses = total spent
+  // SELL: revenue - expenses = net gross
   const total_gross = status === GrainStatus.BUY
     ? total_grain_value + total_expenses
     : total_grain_value - total_expenses;

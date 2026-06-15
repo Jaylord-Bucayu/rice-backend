@@ -9,6 +9,12 @@ export class Tracking extends AbstractEntity<Tracking> {
   @Column()
   total_sacks: number;
 
+  @Column('int')
+  cropping: number
+
+  @Column('int', { nullable: true })
+  cropping_year: number
+
   @Column()
   total_kilos: number;
 
