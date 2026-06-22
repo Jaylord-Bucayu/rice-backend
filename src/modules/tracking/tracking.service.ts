@@ -101,32 +101,39 @@ private normalizeBackload(backload?: {
   }
 
 
-  async findAll(start_date?: string, end_date?: string): Promise<Tracking[]> {
-    let where: any = {};
+ 
+async findAll(start_date?: string, end_date?: string, cropping?: number,
+  cropping_year?: number): Promise<Tracking[]> {
+  let where: any = {};
 
-    if (start_date || end_date) {
-      const start = new Date(start_date);
-      let end: Date;
+  const croppingNum = cropping ? Number(cropping) : null  // 👈 parse early
 
-      if (end_date) {
-        end = new Date(end_date);
-      } else {
-        end = new Date(start_date);
-      }
-
-      end.setUTCHours(23, 59, 59, 999);
-
-      where = {
-        createdAt: {
-          $gte: start,
-          $lte: end,
-        },
-      };
-    }
-
-    return this.trackingRepository.find({ where });
+  if (croppingNum === 1 || croppingNum === 2) {
+    where.cropping = croppingNum
   }
 
+  if (cropping_year) where.cropping_year = Number(cropping_year)
+
+  if (!croppingNum && (start_date || end_date)) {
+    const start = new Date(start_date);
+    let end: Date;
+
+    if (end_date) {
+      end = new Date(end_date);
+    } else {
+      end = new Date(start_date);
+    }
+
+    end.setUTCHours(23, 59, 59, 999);
+
+    where.createdAt = {
+      $gte: start,
+      $lte: end,
+    };
+  }
+
+  return this.trackingRepository.find({ where });
+}
   async findOne(id: string): Promise<Tracking> {
     let objectId: ObjectId;
     try {
@@ -198,10 +205,18 @@ private normalizeBackload(backload?: {
     }
   }
 
-   async getTotals(start_date?: string, end_date?: string) {
+async getTotals(start_date?: string, end_date?: string, cropping?: number, cropping_year?: number) {
   let where: any = {};
 
-  if (start_date || end_date) {
+  const croppingNum = cropping ? Number(cropping) : null;
+
+  if (croppingNum === 1 || croppingNum === 2) {
+    where.cropping = croppingNum;
+  }
+
+  if (cropping_year) where.cropping_year = Number(cropping_year);
+
+  if (!croppingNum && (start_date || end_date)) {
     const start = new Date(start_date);
     let end = end_date ? new Date(end_date) : new Date(start_date);
     end.setUTCHours(23, 59, 59, 999);
@@ -231,7 +246,6 @@ private normalizeBackload(backload?: {
 
   return totals;
 }
-
 
 
 }

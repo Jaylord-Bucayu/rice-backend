@@ -25,8 +25,10 @@ export class TrackingController {
   findAll(
     @Query('start_date') start_date?: string,
     @Query('end_date') end_date?: string,
+    @Query('cropping') cropping?: number,
+   @Query('cropping_year') cropping_year?: number,
   ) {
-    return this.trackingsService.findAll(start_date, end_date);
+    return this.trackingsService.findAll(start_date, end_date,cropping,cropping_year);
   }
 
   // 🔥 NEW: totals endpoint
@@ -34,8 +36,10 @@ export class TrackingController {
   getTotals(
     @Query('start_date') start_date?: string,
     @Query('end_date') end_date?: string,
+    @Query('cropping') cropping?: number,
+   @Query('cropping_year') cropping_year?: number,
   ) {
-    return this.trackingsService.getTotals(start_date, end_date);
+    return this.trackingsService.getTotals(start_date, end_date,cropping,cropping_year);
   }
 
   @Get(':id')
